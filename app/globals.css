@@ -4,18 +4,6 @@
 
 :root {
   color-scheme: light;
-  --bg: #f6f7fb;
-  --panel: rgba(255, 255, 255, 0.82);
-  --panel-solid: #ffffff;
-  --text: #111827;
-  --muted: #6b7280;
-  --border: rgba(15, 23, 42, 0.08);
-  --border-strong: rgba(15, 23, 42, 0.14);
-  --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.06);
-  --shadow-card: 0 12px 40px rgba(15, 23, 42, 0.08);
-  --radius-xl: 18px;
-  --radius-2xl: 22px;
-  --radius-3xl: 28px;
 }
 
 html,
@@ -34,9 +22,8 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-  background:
-    radial-gradient(circle at top, #fbfcfe 0%, #f6f7fb 35%, #eef2f7 100%);
-  color: var(--text);
+  background: #f4f5f8;
+  color: #18181b;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -52,163 +39,26 @@ button {
   font: inherit;
 }
 
-::selection {
-  background: rgba(24, 24, 27, 0.12);
+button,
+input,
+select,
+textarea {
+  border-radius: 0;
 }
 
-.linear-shell {
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top, #fbfcfe 0%, #f6f7fb 35%, #eef2f7 100%);
-}
+@layer base {
+  button,
+  [type='button'],
+  [type='submit'],
+  [type='reset'] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
 
-.linear-card {
-  background: var(--panel);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-card);
-  border-radius: var(--radius-3xl);
-}
-
-.linear-card-solid {
-  background: var(--panel-solid);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-soft);
-  border-radius: var(--radius-2xl);
-}
-
-.linear-input {
-  width: 100%;
-  border-radius: 14px;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  background: rgba(255, 255, 255, 0.92);
-  padding: 10px 12px;
-  color: #111827;
-  outline: none;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.15s ease;
-}
-
-.linear-input:focus {
-  border-color: rgba(24, 24, 27, 0.22);
-  box-shadow: 0 0 0 4px rgba(24, 24, 27, 0.06);
-  background: #fff;
-}
-
-.linear-label {
-  margin-bottom: 6px;
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: #374151;
-}
-
-.linear-button {
-  border-radius: 14px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #18181b;
-  color: white;
-  padding: 10px 14px;
-  font-size: 14px;
-  font-weight: 600;
-  transition:
-    transform 0.05s ease,
-    opacity 0.15s ease,
-    background 0.15s ease;
-}
-
-.linear-button:hover {
-  background: #27272a;
-}
-
-.linear-button:active {
-  transform: translateY(1px);
-}
-
-.linear-button.secondary {
-  background: white;
-  color: #18181b;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-}
-
-.linear-button.secondary:hover {
-  background: #fafafa;
-}
-
-.linear-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: 999px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.75);
-  padding: 5px 10px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #52525b;
-}
-
-.linear-table-wrap {
-  overflow: hidden;
-  border-radius: 22px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.88);
-}
-
-.linear-table {
-  min-width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.linear-table thead th {
-  background: rgba(244, 244, 245, 0.88);
-  color: #52525b;
-  font-size: 12px;
-  font-weight: 600;
-  text-align: left;
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.linear-table tbody td {
-  padding: 14px 16px;
-  font-size: 14px;
-  color: #18181b;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-  vertical-align: top;
-}
-
-.linear-table tbody tr:hover td {
-  background: rgba(250, 250, 250, 0.85);
-}
-
-.linear-muted {
-  color: var(--muted);
-}
-
-.linear-topbar {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(14px);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-soft);
-  border-radius: var(--radius-3xl);
-}
-
-.linear-section-title {
-  font-size: 18px;
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  color: #111827;
-}
-
-.linear-page-title {
-  font-size: 32px;
-  line-height: 1.05;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  color: #111827;
+  input,
+  select,
+  textarea {
+    -webkit-appearance: none;
+    appearance: none;
+  }
 }
