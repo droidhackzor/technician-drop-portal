@@ -41,6 +41,6 @@ COPY --from=build /app/node_modules/bcryptjs ./node_modules/bcryptjs
 
 RUN chmod +x ./scripts/start-with-bootstrap.sh
 
-EXPOSE 3000
+EXPOSE 8080
 
 CMD ["./scripts/start-with-bootstrap.sh"]
