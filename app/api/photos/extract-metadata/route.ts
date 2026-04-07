@@ -1,22 +1,24 @@
 import { NextResponse } from 'next/server';
 import { extractPhotoMetadata } from '@/lib/photo-metadata';
 
-export async function POST(request: Request) {
-  const data = await request.formData();
-  const photo = data.get('photo');
+export async function POST(req: Request) {
+  try {
+    const formData = await req.formData();
+    const file = formData.get('file');
 
-  if (!(photo instanceof File) || photo.size === 0) {
-    return NextResponse.json({ error: 'A photo file is required.' }, { status: 400 });
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const metadata = await extractPhotoMetadata(buffer);
+
+    return NextResponse.json(metadata);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: 'Failed to extract metadata' },
+      { status: 500 }
+    );
   }
-
-  const buffer = Buffer.from(await photo.arrayBuffer());
-  const metadata = await extractPhotoMetadata(buffer);
-
-  return NextResponse.json({
-    latitude: metadata.latitude,
-    longitude: metadata.longitude,
-    address: metadata.address,
-    capturedAt: metadata.capturedAt,
-    source: Object.keys(metadata.raw).length ? 'embedded-metadata' : 'none',
-  });
 }
