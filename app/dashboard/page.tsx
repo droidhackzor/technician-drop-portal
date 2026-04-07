@@ -78,6 +78,7 @@ export default function DashboardPage() {
   async function loadSubmissions() {
     try {
       setLoading(true);
+      setError('');
       const res = await fetch('/api/submissions', { cache: 'no-store' });
       const data = await res.json();
 
@@ -230,66 +231,53 @@ export default function DashboardPage() {
   }, [search, submissions]);
 
   return (
-    <main className="min-h-screen bg-[#f4f5f8] text-zinc-900">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-6 rounded-[28px] border border-zinc-200 bg-white px-6 py-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="mb-3 inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
-                Linear-style field operations
-              </div>
-              <h1 className="text-3xl font-semibold tracking-[-0.04em] text-zinc-950">
-                Technician Drop Portal
-              </h1>
-              <p className="mt-2 text-sm text-zinc-500">
-                Submit cut, trapped, and hazardous drop reports with metadata-rich photos.
-              </p>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-            >
-              Sign out
-            </button>
+    <main style={styles.page}>
+      <div style={styles.shell}>
+        <div style={styles.topbar}>
+          <div>
+            <div style={styles.badge}>Linear-style field operations</div>
+            <h1 style={styles.title}>Technician Drop Portal</h1>
+            <p style={styles.subtitle}>
+              Submit cut, trapped, and hazardous drop reports with metadata-rich photos.
+            </p>
           </div>
+
+          <button onClick={handleLogout} style={styles.secondaryButton}>
+            Sign out
+          </button>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
-          <section className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-            <div className="mb-5">
-              <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">
-                New submission
-              </h2>
-              <p className="mt-1 text-sm text-zinc-500">
+        <div style={styles.grid}>
+          <section style={styles.card}>
+            <div style={styles.sectionHeader}>
+              <h2 style={styles.sectionTitle}>New submission</h2>
+              <p style={styles.sectionText}>
                 Add one or more photos and create a new field report.
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-4">
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
-                  Photos
-                </label>
+            <form onSubmit={handleSubmit} style={styles.formStack}>
+              <div style={styles.uploadBox}>
+                <label style={styles.label}>Photos</label>
                 <input
                   type="file"
                   accept="image/*"
                   multiple
                   onChange={(e) => void handleFileChange(e.target.files)}
-                  className="block w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm"
+                  style={styles.input}
                 />
-                <p className="mt-2 text-xs text-zinc-500">
+                <p style={styles.helperText}>
                   Multiple files supported. Metadata preview uses the first image.
                 </p>
 
                 {files.length > 0 && (
-                  <div className="mt-3 rounded-xl border border-zinc-200 bg-white p-3">
-                    <div className="mb-2 text-sm font-medium text-zinc-800">
+                  <div style={styles.innerPanel}>
+                    <div style={styles.innerPanelTitle}>
                       {files.length} file(s) selected
                     </div>
-                    <ul className="space-y-1 text-sm text-zinc-600">
+                    <ul style={styles.fileList}>
                       {files.map((file) => (
-                        <li key={file.name} className="truncate">
+                        <li key={file.name} style={styles.fileItem}>
                           {file.name}
                         </li>
                       ))}
@@ -299,20 +287,19 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
-                  Issue Type
-                </label>
-                <div className="grid grid-cols-3 gap-2">
+                <label style={styles.label}>Issue Type</label>
+                <div style={styles.choiceGrid}>
                   {typeOptions.map((option) => (
                     <button
                       key={option.value}
                       type="button"
                       onClick={() => setType(option.value)}
-                      className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
-                        type === option.value
-                          ? 'border-zinc-900 bg-zinc-900 text-white'
-                          : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50'
-                      }`}
+                      style={{
+                        ...styles.choiceButton,
+                        ...(type === option.value
+                          ? styles.choiceButtonActive
+                          : styles.choiceButtonInactive),
+                      }}
                     >
                       {option.label}
                     </button>
@@ -321,20 +308,19 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
-                  Department
-                </label>
-                <div className="grid grid-cols-3 gap-2">
+                <label style={styles.label}>Department</label>
+                <div style={styles.choiceGrid}>
                   {departmentOptions.map((option) => (
                     <button
                       key={option.value}
                       type="button"
                       onClick={() => setDepartment(option.value)}
-                      className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
-                        department === option.value
-                          ? 'border-zinc-900 bg-zinc-900 text-white'
-                          : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50'
-                      }`}
+                      style={{
+                        ...styles.choiceButton,
+                        ...(department === option.value
+                          ? styles.choiceButtonActive
+                          : styles.choiceButtonInactive),
+                      }}
                     >
                       {option.label}
                     </button>
@@ -342,7 +328,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div style={styles.threeCol}>
                 <Field label="Region" value={region} onChange={setRegion} />
                 <Field label="State" value={stateName} onChange={setStateName} />
                 <Field label="FFO" value={ffo} onChange={setFfo} />
@@ -363,34 +349,29 @@ export default function DashboardPage() {
               />
 
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
-                  Notes
-                </label>
+                <label style={styles.label}>Notes</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={4}
                   placeholder="Additional field notes"
-                  className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-100"
+                  style={styles.textarea}
                 />
               </div>
 
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-zinc-900">Metadata Preview</h3>
-                  {extracting ? (
-                    <span className="text-xs text-zinc-500">Extracting...</span>
-                  ) : null}
+              <div style={styles.previewPanel}>
+                <div style={styles.previewHeader}>
+                  <h3 style={styles.previewTitle}>Metadata Preview</h3>
+                  {extracting ? <span style={styles.helperText}>Extracting...</span> : null}
                 </div>
 
                 {metadataPreview ? (
-                  <div className="space-y-1 text-sm text-zinc-700">
+                  <div style={styles.previewTextBlock}>
                     <div>
-                      <span className="font-medium">Address:</span>{' '}
-                      {metadataPreview.address || 'Not found'}
+                      <strong>Address:</strong> {metadataPreview.address || 'Not found'}
                     </div>
                     <div>
-                      <span className="font-medium">GPS:</span>{' '}
+                      <strong>GPS:</strong>{' '}
                       {metadataPreview.gpsText ||
                         (typeof metadataPreview.latitude === 'number' &&
                         typeof metadataPreview.longitude === 'number'
@@ -398,46 +379,30 @@ export default function DashboardPage() {
                           : 'Not found')}
                     </div>
                     <div>
-                      <span className="font-medium">Captured:</span>{' '}
-                      {metadataPreview.capturedAt || 'Not found'}
+                      <strong>Captured:</strong> {metadataPreview.capturedAt || 'Not found'}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-zinc-500">
+                  <p style={styles.sectionText}>
                     Select a photo to preview embedded metadata.
                   </p>
                 )}
               </div>
 
-              {error ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {error}
-                </div>
-              ) : null}
+              {error ? <div style={styles.errorBox}>{error}</div> : null}
+              {success ? <div style={styles.successBox}>{success}</div> : null}
 
-              {success ? (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                  {success}
-                </div>
-              ) : null}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:opacity-60"
-              >
+              <button type="submit" disabled={submitting} style={styles.primaryButton}>
                 {submitting ? 'Submitting...' : 'Create Submission'}
               </button>
             </form>
           </section>
 
-          <section className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <section style={styles.card}>
+            <div style={styles.tableHeader}>
               <div>
-                <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">
-                  Recent submissions
-                </h2>
-                <p className="mt-1 text-sm text-zinc-500">
+                <h2 style={styles.sectionTitle}>Recent submissions</h2>
+                <p style={styles.sectionText}>
                   Search by address, GPS, FFO, notes, or technician.
                 </p>
               </div>
@@ -446,15 +411,15 @@ export default function DashboardPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search submissions"
-                className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-100 sm:max-w-sm"
+                style={{ ...styles.input, maxWidth: 320 }}
               />
             </div>
 
-            <div className="overflow-hidden rounded-[22px] border border-zinc-200">
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="bg-zinc-50">
-                    <tr className="text-left">
+            <div style={styles.tableWrap}>
+              <div style={styles.tableScroll}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
                       {[
                         'Type',
                         'Department',
@@ -466,10 +431,7 @@ export default function DashboardPage() {
                         'Submitted',
                         'Technician',
                       ].map((heading) => (
-                        <th
-                          key={heading}
-                          className="border-b border-zinc-200 px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500"
-                        >
+                        <th key={heading} style={styles.th}>
                           {heading}
                         </th>
                       ))}
@@ -478,50 +440,30 @@ export default function DashboardPage() {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td
-                          colSpan={9}
-                          className="px-4 py-10 text-center text-sm text-zinc-500"
-                        >
+                        <td colSpan={9} style={styles.emptyCell}>
                           Loading submissions...
                         </td>
                       </tr>
                     ) : filteredSubmissions.length === 0 ? (
                       <tr>
-                        <td
-                          colSpan={9}
-                          className="px-4 py-10 text-center text-sm text-zinc-500"
-                        >
+                        <td colSpan={9} style={styles.emptyCell}>
                           No submissions found
                         </td>
                       </tr>
                     ) : (
                       filteredSubmissions.map((submission) => (
-                        <tr key={submission.id} className="hover:bg-zinc-50">
-                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
-                            {typeLabels[submission.type]}
-                          </td>
-                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
-                            {departmentLabels[submission.department]}
-                          </td>
-                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
-                            {submission.address || '—'}
-                          </td>
-                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
-                            {submission.gpsText || '—'}
-                          </td>
-                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
-                            {submission.region}
-                          </td>
-                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
-                            {submission.state}
-                          </td>
-                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
-                            {submission.ffo}
-                          </td>
-                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
+                        <tr key={submission.id}>
+                          <td style={styles.td}>{typeLabels[submission.type]}</td>
+                          <td style={styles.td}>{departmentLabels[submission.department]}</td>
+                          <td style={styles.td}>{submission.address || '—'}</td>
+                          <td style={styles.td}>{submission.gpsText || '—'}</td>
+                          <td style={styles.td}>{submission.region}</td>
+                          <td style={styles.td}>{submission.state}</td>
+                          <td style={styles.td}>{submission.ffo}</td>
+                          <td style={styles.td}>
                             {new Date(submission.createdAt).toLocaleString()}
                           </td>
-                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
+                          <td style={styles.td}>
                             {submission.submittedBy?.name ||
                               submission.submittedBy?.email ||
                               '—'}
@@ -553,15 +495,300 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
-        {label}
-      </label>
+      <label style={styles.label}>{label}</label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-100"
+        style={styles.input}
       />
     </div>
   );
 }
+
+const styles: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: '100vh',
+    background:
+      'radial-gradient(circle at top, #fbfcfe 0%, #f4f6fb 45%, #edf2f7 100%)',
+    color: '#18181b',
+    fontFamily:
+      'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  },
+  shell: {
+    maxWidth: 1280,
+    margin: '0 auto',
+    padding: '24px 16px 40px',
+  },
+  topbar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 16,
+    padding: 24,
+    marginBottom: 24,
+    background: 'rgba(255,255,255,0.88)',
+    border: '1px solid rgba(15,23,42,0.08)',
+    borderRadius: 28,
+    boxShadow: '0 10px 30px rgba(15,23,42,0.06)',
+    backdropFilter: 'blur(10px)',
+  },
+  badge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    borderRadius: 999,
+    border: '1px solid rgba(15,23,42,0.08)',
+    background: '#f8fafc',
+    color: '#52525b',
+    fontSize: 12,
+    fontWeight: 600,
+    padding: '6px 10px',
+    marginBottom: 12,
+  },
+  title: {
+    margin: 0,
+    fontSize: 48,
+    lineHeight: 1.02,
+    letterSpacing: '-0.05em',
+    fontWeight: 700,
+    color: '#111827',
+  },
+  subtitle: {
+    margin: '10px 0 0',
+    color: '#6b7280',
+    fontSize: 15,
+  },
+  secondaryButton: {
+    borderRadius: 14,
+    border: '1px solid rgba(15,23,42,0.1)',
+    background: '#fff',
+    color: '#111827',
+    fontSize: 14,
+    fontWeight: 600,
+    padding: '10px 14px',
+    cursor: 'pointer',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '420px minmax(0,1fr)',
+    gap: 24,
+  },
+  card: {
+    background: 'rgba(255,255,255,0.92)',
+    border: '1px solid rgba(15,23,42,0.08)',
+    borderRadius: 28,
+    boxShadow: '0 10px 30px rgba(15,23,42,0.06)',
+    padding: 20,
+  },
+  sectionHeader: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    margin: 0,
+    fontSize: 22,
+    lineHeight: 1.1,
+    letterSpacing: '-0.03em',
+    fontWeight: 650,
+    color: '#111827',
+  },
+  sectionText: {
+    margin: '8px 0 0',
+    fontSize: 14,
+    color: '#6b7280',
+    lineHeight: 1.5,
+  },
+  formStack: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 16,
+  },
+  uploadBox: {
+    borderRadius: 20,
+    border: '1px dashed rgba(15,23,42,0.18)',
+    background: '#f8fafc',
+    padding: 16,
+  },
+  label: {
+    display: 'block',
+    marginBottom: 8,
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#6b7280',
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  innerPanel: {
+    marginTop: 12,
+    background: '#fff',
+    border: '1px solid rgba(15,23,42,0.08)',
+    borderRadius: 16,
+    padding: 12,
+  },
+  innerPanelTitle: {
+    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: 600,
+    color: '#111827',
+  },
+  fileList: {
+    margin: 0,
+    paddingLeft: 18,
+  },
+  fileItem: {
+    fontSize: 14,
+    color: '#52525b',
+    lineHeight: 1.5,
+  },
+  choiceGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: 8,
+  },
+  choiceButton: {
+    borderRadius: 14,
+    padding: '10px 12px',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  choiceButtonActive: {
+    background: '#111827',
+    color: '#fff',
+    border: '1px solid #111827',
+  },
+  choiceButtonInactive: {
+    background: '#fff',
+    color: '#374151',
+    border: '1px solid rgba(15,23,42,0.1)',
+  },
+  threeCol: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: 12,
+  },
+  input: {
+    width: '100%',
+    borderRadius: 16,
+    border: '1px solid rgba(15,23,42,0.1)',
+    background: '#fff',
+    color: '#111827',
+    fontSize: 14,
+    padding: '12px 14px',
+    outline: 'none',
+    boxSizing: 'border-box',
+  },
+  textarea: {
+    width: '100%',
+    borderRadius: 16,
+    border: '1px solid rgba(15,23,42,0.1)',
+    background: '#fff',
+    color: '#111827',
+    fontSize: 14,
+    padding: '12px 14px',
+    outline: 'none',
+    boxSizing: 'border-box',
+    resize: 'vertical',
+    minHeight: 120,
+  },
+  previewPanel: {
+    borderRadius: 20,
+    border: '1px solid rgba(15,23,42,0.08)',
+    background: '#f8fafc',
+    padding: 16,
+  },
+  previewHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  previewTitle: {
+    margin: 0,
+    fontSize: 14,
+    fontWeight: 700,
+    color: '#111827',
+  },
+  previewTextBlock: {
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 1.6,
+  },
+  errorBox: {
+    borderRadius: 16,
+    border: '1px solid #fecaca',
+    background: '#fef2f2',
+    color: '#b91c1c',
+    padding: '12px 14px',
+    fontSize: 14,
+  },
+  successBox: {
+    borderRadius: 16,
+    border: '1px solid #bbf7d0',
+    background: '#f0fdf4',
+    color: '#15803d',
+    padding: '12px 14px',
+    fontSize: 14,
+  },
+  primaryButton: {
+    width: '100%',
+    borderRadius: 16,
+    border: 'none',
+    background: '#111827',
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 700,
+    padding: '14px 16px',
+    cursor: 'pointer',
+  },
+  tableHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 16,
+    marginBottom: 16,
+  },
+  tableWrap: {
+    overflow: 'hidden',
+    borderRadius: 22,
+    border: '1px solid rgba(15,23,42,0.08)',
+    background: '#fff',
+  },
+  tableScroll: {
+    overflowX: 'auto',
+  },
+  table: {
+    width: '100%',
+    minWidth: 980,
+    borderCollapse: 'collapse',
+  },
+  th: {
+    background: '#f8fafc',
+    borderBottom: '1px solid rgba(15,23,42,0.08)',
+    color: '#6b7280',
+    fontSize: 12,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    textAlign: 'left',
+    padding: '14px 16px',
+    whiteSpace: 'nowrap',
+  },
+  td: {
+    borderBottom: '1px solid rgba(15,23,42,0.06)',
+    color: '#111827',
+    fontSize: 14,
+    padding: '14px 16px',
+    verticalAlign: 'top',
+    whiteSpace: 'nowrap',
+  },
+  emptyCell: {
+    padding: '32px 16px',
+    textAlign: 'center',
+    color: '#6b7280',
+    fontSize: 14,
+  },
+};
