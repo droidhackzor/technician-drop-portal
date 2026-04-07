@@ -2,11 +2,15 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Cable Drop Portal',
-  description: 'Field photo upload and searchable metadata portal for cable technicians and leadership.',
+  title: 'Technician Drop Portal',
+  description: 'Cable technician submission portal',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>{children}</body>
