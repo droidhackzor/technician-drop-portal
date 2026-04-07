@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { extractPhotoMetadata } from '@/lib/photo-metadata';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 const submissionSchema = z.object({
   type: z.enum(['CUT_DROP', 'TRAPPED_DROP', 'HAZARDOUS_DROP']),
   department: z.enum(['FULFILLMENT', 'LINE', 'SUPERVISORS']),
@@ -18,6 +21,7 @@ const submissionSchema = z.object({
 export async function GET() {
   try {
     const session = await getSession();
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -38,7 +42,7 @@ export async function GET() {
 
     return NextResponse.json({ submissions });
   } catch (error) {
-    console.error(error);
+    console.error('GET /api/submissions failed:', error);
     return NextResponse.json(
       { error: 'Failed to load submissions' },
       { status: 500 }
@@ -49,6 +53,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const session = await getSession();
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -61,22 +66,27 @@ export async function POST(req: Request) {
       region: formData.get('region'),
       state: formData.get('state'),
       ffo: formData.get('ffo'),
-      address: formData.get('address'),
-      notes: formData.get('notes'),
+      address: formData.get('address') || '',
+      notes: formData.get('notes') || '',
     });
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid submission payload', details: parsed.error.flatten() },
+        {
+          error: 'Invalid submission payload',
+          details: parsed.error.flatten(),
+        },
         { status: 400 }
       );
     }
 
-    const files = formData.getAll('files') as File[];
+    const files = formData
+      .getAll('files')
+      .filter((value): value is File => value instanceof File);
 
-    if (!files.length) {
+    if (files.length === 0) {
       return NextResponse.json(
-        { error: 'Please upload at least one file' },
+        { error: 'Please upload at least one photo' },
         { status: 400 }
       );
     }
@@ -97,6 +107,10 @@ export async function POST(req: Request) {
         ? `${primaryMetadata.latitude}, ${primaryMetadata.longitude}`
         : undefined);
 
+    const safeMetadataJson = JSON.parse(
+      JSON.stringify(primaryMetadata.raw ?? {})
+    ) as Prisma.InputJsonValue;
+
     const submission = await prisma.submission.create({
       data: {
         type: parsed.data.type as SubmissionType,
@@ -111,7 +125,7 @@ export async function POST(req: Request) {
         capturedAt: primaryMetadata.capturedAt
           ? new Date(primaryMetadata.capturedAt)
           : undefined,
-        metadataJson: (primaryMetadata.raw || {}) as Prisma.InputJsonValue,
+        metadataJson: safeMetadataJson,
         notes: parsed.data.notes || undefined,
         submittedById: session.id,
       },
@@ -125,12 +139,16 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({ success: true, submission });
+    return NextResponse.json({
+      success: true,
+      submission,
+    });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: 'Failed to create submission' },
-      { status: 500 }
-    );
+    console.error('POST /api/submissions failed:', error);
+
+    const message =
+      error instanceof Error ? error.message : 'Failed to create submission';
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
