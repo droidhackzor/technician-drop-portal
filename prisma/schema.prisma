@@ -12,10 +12,70 @@ enum UserRole {
   LEADERSHIP
 }
 
+enum Department {
+  FULFILLMENT
+  LINE
+  SUPERVISORS
+}
+
 enum SubmissionType {
   CUT_DROP
   TRAPPED_DROP
   HAZARDOUS_DROP
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  name         String?
+  role         UserRole     @default(TECHNICIAN)
+  region       String?
+  state        String?
+  ffo          String?
+  department   Department?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  submissions  Submission[]
+}
+
+model Submission {
+  id            String         @id @default(cuid())
+  type          SubmissionType
+  department    Department
+  region        String
+  state         String
+  ffo           String
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  gpsText       String?
+  capturedAt    DateTime?
+  metadataJson  Json?
+  notes         String?
+  submittedById String
+  submittedBy   User           @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([createdAt])
+  @@index([region])
+  @@index([state])
+  @@index([ffo])
+  @@index([department])
+  @@index([type])
+}generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  TECHNICIAN
+  LEADERSHIP
 }
 
 enum Department {
@@ -24,50 +84,116 @@ enum Department {
   SUPERVISORS
 }
 
+enum SubmissionType {
+  CUT_DROP
+  TRAPPED_DROP
+  HAZARDOUS_DROP
+}
+
 model User {
   id           String       @id @default(cuid())
   email        String       @unique
   passwordHash String
-  fullName     String
-  role         UserRole
+  name         String?
+  role         UserRole     @default(TECHNICIAN)
+  region       String?
+  state        String?
+  ffo          String?
+  department   Department?
   createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
   submissions  Submission[]
 }
 
 model Submission {
-  id               String         @id @default(cuid())
-  type             SubmissionType
-  region           String
-  state            String
-  ffo              String
-  department       Department
-  houseAddress     String
-  metadataAddress  String?
-  gpsLat           Decimal?       @db.Decimal(10, 7)
-  gpsLng           Decimal?       @db.Decimal(10, 7)
-  gpsText          String?
-  capturedAt       DateTime?
-  metadataJson     Json?
-  notes            String?
-  submittedAt      DateTime       @default(now())
-  submittedBy      User           @relation(fields: [submittedById], references: [id])
-  submittedById    String
-  photos           Photo[]
+  id            String         @id @default(cuid())
+  type          SubmissionType
+  department    Department
+  region        String
+  state         String
+  ffo           String
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  gpsText       String?
+  capturedAt    DateTime?
+  metadataJson  Json?
+  notes         String?
+  submittedById String
+  submittedBy   User           @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  @@index([submittedAt(sort: Desc)])
-  @@index([houseAddress])
-  @@index([metadataAddress])
-  @@index([gpsText])
-  @@index([region, state, ffo])
+  @@index([createdAt])
+  @@index([region])
+  @@index([state])
+  @@index([ffo])
+  @@index([department])
+  @@index([type])
+}generator client {
+  provider = "prisma-client-js"
 }
 
-model Photo {
-  id            String      @id @default(cuid())
-  originalName  String
-  filePath      String
-  mimeType      String
-  sizeBytes     Int
-  createdAt     DateTime    @default(now())
-  submission    Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  submissionId  String
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  TECHNICIAN
+  LEADERSHIP
+}
+
+enum Department {
+  FULFILLMENT
+  LINE
+  SUPERVISORS
+}
+
+enum SubmissionType {
+  CUT_DROP
+  TRAPPED_DROP
+  HAZARDOUS_DROP
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  name         String?
+  role         UserRole     @default(TECHNICIAN)
+  region       String?
+  state        String?
+  ffo          String?
+  department   Department?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  submissions  Submission[]
+}
+
+model Submission {
+  id            String         @id @default(cuid())
+  type          SubmissionType
+  department    Department
+  region        String
+  state         String
+  ffo           String
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  gpsText       String?
+  capturedAt    DateTime?
+  metadataJson  Json?
+  notes         String?
+  submittedById String
+  submittedBy   User           @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([createdAt])
+  @@index([region])
+  @@index([state])
+  @@index([ffo])
+  @@index([department])
+  @@index([type])
 }
