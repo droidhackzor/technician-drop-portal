@@ -27,10 +27,11 @@ export async function login(email: string, password: string) {
     .setExpirationTime('7d')
     .sign(JWT_SECRET);
 
-  cookies().set('session', token, {
-    httpOnly: true,
-    secure: true,
-    path: '/',
+cookies().set('session', token, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  path: '/',
   });
 
   return {
