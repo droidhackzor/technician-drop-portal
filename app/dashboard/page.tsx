@@ -368,8 +368,8 @@ export default function DashboardPage() {
       <div style={styles.shell}>
         <div style={styles.topbar}>
           <div style={{ minWidth: 0 }}>
-            <div style={styles.badge}>Linear-style field operations</div>
-            <h1 style={styles.title}>Technician Drop Portal</h1>
+            <div style={styles.badge}>field operations</div>
+            <h1 style={styles.title}>Technician Drop Entry Portal</h1>
             <p style={styles.subtitle}>
               Submit cut, trapped, and hazardous drop reports with metadata-rich photos.
             </p>
