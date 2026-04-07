@@ -4,11 +4,9 @@ set -euo pipefail
 echo "[startup] running Prisma migrations"
 ./node_modules/prisma/build/index.js migrate deploy
 
-echo "[startup] seeding demo users if needed"
-if [ -f "./prisma/seed.js" ]; then
+if [ "${SEED_ON_STARTUP:-true}" = "true" ]; then
+  echo "[startup] seeding demo users if needed"
   node ./prisma/seed.js || true
-elif [ -f "./prisma/seed.ts" ]; then
-  npx tsx ./prisma/seed.ts || true
 fi
 
 echo "[startup] starting app"
