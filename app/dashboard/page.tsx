@@ -214,56 +214,53 @@ export default function DashboardPage() {
   }, [submissions, search]);
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#f8fafc_0%,#f4f6fb_45%,#eef2f7_100%)] text-zinc-900">
+    <main className="linear-shell">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col gap-4 rounded-3xl border border-white/70 bg-white/80 px-6 py-5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur md:flex-row md:items-center md:justify-between">
+        <div className="linear-topbar mb-6 flex flex-col gap-4 px-6 py-5 md:flex-row md:items-center md:justify-between">
           <div>
-            <div className="mb-2 inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
-              Field Operations
-            </div>
-            <h1 className="text-3xl font-semibold tracking-tight">Technician Drop Portal</h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              Upload field photos, extract metadata, and review submissions by newest first
+            <div className="linear-badge mb-3">Cable Ops Portal</div>
+            <h1 className="linear-page-title">Technician Drop Portal</h1>
+            <p className="mt-2 text-sm linear-muted">
+              Upload field photos, review metadata, and track cut, trapped, and hazardous drops.
             </p>
           </div>
 
-          <button
-            onClick={handleLogout}
-            className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-          >
+          <button onClick={handleLogout} className="linear-button secondary">
             Sign out
           </button>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[430px_1fr]">
-          <section className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold tracking-tight">New Submission</h2>
-              <p className="mt-1 text-sm text-zinc-500">
-                Upload one or more photos and submit a new issue report
+        <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
+          <section className="linear-card p-5">
+            <div className="mb-5">
+              <h2 className="linear-section-title">New submission</h2>
+              <p className="mt-1 text-sm linear-muted">
+                Add one or more photos and submit a new report.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/80 p-4">
-                <label className="mb-2 block text-sm font-medium">Photos</label>
+              <div className="rounded-[22px] border border-dashed border-zinc-300 bg-white/70 p-4">
+                <label className="linear-label">Photos</label>
                 <input
                   type="file"
                   accept="image/*"
                   multiple
                   onChange={(e) => void handleFileChange(e.target.files)}
-                  className="block w-full text-sm"
+                  className="linear-input"
                 />
-                <p className="mt-2 text-xs text-zinc-500">
-                  Multiple files supported. First image is used for metadata preview.
+                <p className="mt-2 text-xs linear-muted">
+                  Multiple files supported. Metadata preview uses the first image.
                 </p>
 
                 {files.length > 0 && (
-                  <div className="mt-3 rounded-xl border border-zinc-200 bg-white p-3 text-sm text-zinc-700">
-                    <div className="mb-2 font-medium">{files.length} file(s) selected</div>
-                    <ul className="space-y-1">
+                  <div className="mt-3 rounded-2xl border border-zinc-200 bg-white p-3">
+                    <div className="mb-2 text-sm font-semibold text-zinc-800">
+                      {files.length} file(s) selected
+                    </div>
+                    <ul className="space-y-1 text-sm text-zinc-600">
                       {files.map((file) => (
-                        <li key={file.name} className="truncate text-zinc-600">
+                        <li key={file.name} className="truncate">
                           {file.name}
                         </li>
                       ))}
@@ -274,11 +271,11 @@ export default function DashboardPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Issue Type</label>
+                  <label className="linear-label">Issue Type</label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value as Submission['type'])}
-                    className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm"
+                    className="linear-input"
                   >
                     <option value="CUT_DROP">Cut Drop</option>
                     <option value="TRAPPED_DROP">Trapped Drop</option>
@@ -287,11 +284,11 @@ export default function DashboardPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Department</label>
+                  <label className="linear-label">Department</label>
                   <select
                     value={department}
                     onChange={(e) => setDepartment(e.target.value as Submission['department'])}
-                    className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm"
+                    className="linear-input"
                   >
                     <option value="FULFILLMENT">Fulfillment</option>
                     <option value="LINE">Line</option>
@@ -302,68 +299,68 @@ export default function DashboardPage() {
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Region</label>
+                  <label className="linear-label">Region</label>
                   <input
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm"
+                    className="linear-input"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium">State</label>
+                  <label className="linear-label">State</label>
                   <input
                     value={stateName}
                     onChange={(e) => setStateName(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm"
+                    className="linear-input"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium">FFO</label>
+                  <label className="linear-label">FFO</label>
                   <input
                     value={ffo}
                     onChange={(e) => setFfo(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm"
+                    className="linear-input"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">Address</label>
+                <label className="linear-label">Address</label>
                 <input
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Metadata or manual address"
-                  className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm"
+                  className="linear-input"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">GPS</label>
+                <label className="linear-label">GPS</label>
                 <input
                   value={gpsText}
                   onChange={(e) => setGpsText(e.target.value)}
-                  placeholder="Lat, Long"
-                  className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm"
+                  placeholder="Latitude, Longitude"
+                  className="linear-input"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">Notes</label>
+                <label className="linear-label">Notes</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={4}
-                  className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm"
-                  placeholder="Add any field notes"
+                  placeholder="Additional field notes"
+                  className="linear-input"
                 />
               </div>
 
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4">
+              <div className="rounded-[22px] border border-zinc-200 bg-white/70 p-4">
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">Metadata Preview</h3>
-                  {extracting ? <span className="text-xs text-zinc-500">Extracting...</span> : null}
+                  <h3 className="text-sm font-semibold text-zinc-800">Metadata Preview</h3>
+                  {extracting ? <span className="text-xs linear-muted">Extracting...</span> : null}
                 </div>
 
                 {metadataPreview ? (
@@ -384,96 +381,88 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-zinc-500">
+                  <p className="text-sm linear-muted">
                     Select a photo to preview embedded metadata.
                   </p>
                 )}
               </div>
 
               {error ? (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className="rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                   {error}
                 </div>
               ) : null}
 
               {success ? (
-                <div className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
                   {success}
                 </div>
               ) : null}
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-60"
-              >
+              <button type="submit" disabled={submitting} className="linear-button w-full">
                 {submitting ? 'Submitting...' : 'Create Submission'}
               </button>
             </form>
           </section>
 
-          <section className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur">
+          <section className="linear-card p-5">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold tracking-tight">Recent Submissions</h2>
-                <p className="mt-1 text-sm text-zinc-500">
-                  Searchable submissions sorted by newest first
+                <h2 className="linear-section-title">Recent submissions</h2>
+                <p className="mt-1 text-sm linear-muted">
+                  Search by address, GPS, FFO, notes, or technician.
                 </p>
               </div>
 
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search address, GPS, FFO, notes, technician"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm sm:max-w-sm"
+                placeholder="Search submissions"
+                className="linear-input sm:max-w-sm"
               />
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-zinc-200">
+            <div className="linear-table-wrap">
               <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-zinc-50 text-left text-zinc-600">
+                <table className="linear-table">
+                  <thead>
                     <tr>
-                      <th className="px-4 py-3 font-medium">Type</th>
-                      <th className="px-4 py-3 font-medium">Department</th>
-                      <th className="px-4 py-3 font-medium">Address</th>
-                      <th className="px-4 py-3 font-medium">GPS</th>
-                      <th className="px-4 py-3 font-medium">Region</th>
-                      <th className="px-4 py-3 font-medium">State</th>
-                      <th className="px-4 py-3 font-medium">FFO</th>
-                      <th className="px-4 py-3 font-medium">Submitted</th>
-                      <th className="px-4 py-3 font-medium">Technician</th>
+                      <th>Type</th>
+                      <th>Department</th>
+                      <th>Address</th>
+                      <th>GPS</th>
+                      <th>Region</th>
+                      <th>State</th>
+                      <th>FFO</th>
+                      <th>Submitted</th>
+                      <th>Technician</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-200">
+                  <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={9} className="px-4 py-10 text-center text-zinc-500">
+                        <td colSpan={9} className="text-center text-zinc-500">
                           Loading submissions...
                         </td>
                       </tr>
                     ) : filtered.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="px-4 py-10 text-center text-zinc-500">
+                        <td colSpan={9} className="text-center text-zinc-500">
                           No submissions found
                         </td>
                       </tr>
                     ) : (
                       filtered.map((submission) => (
-                        <tr key={submission.id} className="align-top hover:bg-zinc-50/60">
-                          <td className="px-4 py-3">{typeLabels[submission.type]}</td>
-                          <td className="px-4 py-3">{deptLabels[submission.department]}</td>
-                          <td className="px-4 py-3">{submission.address || '—'}</td>
-                          <td className="px-4 py-3">{submission.gpsText || '—'}</td>
-                          <td className="px-4 py-3">{submission.region}</td>
-                          <td className="px-4 py-3">{submission.state}</td>
-                          <td className="px-4 py-3">{submission.ffo}</td>
-                          <td className="px-4 py-3">
-                            {new Date(submission.createdAt).toLocaleString()}
-                          </td>
-                          <td className="px-4 py-3">
-                            {submission.submittedBy?.name || submission.submittedBy?.email || '—'}
-                          </td>
+                        <tr key={submission.id}>
+                          <td>{typeLabels[submission.type]}</td>
+                          <td>{deptLabels[submission.department]}</td>
+                          <td>{submission.address || '—'}</td>
+                          <td>{submission.gpsText || '—'}</td>
+                          <td>{submission.region}</td>
+                          <td>{submission.state}</td>
+                          <td>{submission.ffo}</td>
+                          <td>{new Date(submission.createdAt).toLocaleString()}</td>
+                          <td>{submission.submittedBy?.name || submission.submittedBy?.email || '—'}</td>
                         </tr>
                       ))
                     )}
