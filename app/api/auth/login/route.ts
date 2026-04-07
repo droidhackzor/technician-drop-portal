@@ -1,25 +1,42 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authenticateUser, createSession } from '@/lib/auth';
+import { login } from '@/lib/auth';
 
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
 
-export async function POST(request: Request) {
-  const payload = await request.json().catch(() => null);
-  const parsed = schema.safeParse(payload);
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const parsed = schema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid credentials payload.' }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid email or password payload' },
+        { status: 400 }
+      );
+    }
+
+    const user = await login(parsed.data.email, parsed.data.password);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Invalid email or password' },
+        { status: 401 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: 'Login failed' },
+      { status: 500 }
+    );
   }
-
-  const user = await authenticateUser(parsed.data.email, parsed.data.password);
-  if (!user) {
-    return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
-  }
-
-  await createSession(user);
-  return NextResponse.json({ ok: true });
 }
