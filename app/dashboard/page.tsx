@@ -373,6 +373,7 @@ export default function DashboardPage() {
             <p style={styles.subtitle}>
               Submit cut, trapped, and hazardous drop reports with metadata-rich photos.
             </p>
+            <p style={styles.createdBy}>Created by: Joseph Engelmann</p>
           </div>
 
           <button onClick={handleLogout} style={styles.secondaryButton}>
