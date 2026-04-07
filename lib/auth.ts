@@ -1,96 +1,71 @@
-generator client {
-  provider = "prisma-client-js"
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
+import { jwtVerify, SignJWT } from 'jose';
+import { cookies } from 'next/headers';
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'dev-secret'
+);
+
+export type SessionUser = {
+  id: string;
+  email: string;
+  name?: string | null;
+  role: string;
+  department?: string | null;
+};
+
+export async function authenticateUser(
+  email: string,
+  password: string
+): Promise<SessionUser | null> {
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) return null;
+
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) return null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name ?? null,
+    role: user.role,
+    department: user.department ?? null,
+  };
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+export async function createSessionToken(user: SessionUser) {
+  return await new SignJWT({
+    id: user.id,
+    email: user.email,
+    name: user.name ?? null,
+    role: user.role,
+    department: user.department ?? null,
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .sign(JWT_SECRET);
 }
 
-enum UserRole {
-  TECHNICIAN
-  LEADERSHIP
-}
+export async function getSession(): Promise<SessionUser | null> {
+  const token = cookies().get('session')?.value;
+  if (!token) return null;
 
-enum Department {
-  FULFILLMENT
-  LINE
-  SUPERVISORS
-}
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
 
-enum SubmissionType {
-  CUT_DROP
-  TRAPPED_DROP
-  HAZARDOUS_DROP
-}
-
-enum SubmissionStatus {
-  OPEN
-  COMPLETE
-  NOT_VALID
-}
-
-model User {
-  id           String       @id @default(cuid())
-  email        String       @unique
-  passwordHash String
-  name         String?
-  role         UserRole     @default(TECHNICIAN)
-  region       String?
-  state        String?
-  ffo          String?
-  department   Department?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  submissions  Submission[]
-}
-
-model Submission {
-  id                  String           @id @default(cuid())
-  type                SubmissionType
-  department          Department
-  region              String
-  state               String
-  ffo                 String
-  address             String?
-  latitude            Float?
-  longitude           Float?
-  gpsText             String?
-  capturedAt          DateTime?
-  metadataJson        Json?
-  notes               String?
-  status              SubmissionStatus @default(OPEN)
-  statusNote          String?
-  statusUpdatedAt     DateTime?
-  statusUpdatedById   String?
-  statusUpdatedByName String?
-  submittedById       String
-  submittedBy         User             @relation(fields: [submittedById], references: [id], onDelete: Cascade)
-  images              SubmissionImage[]
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
-
-  @@index([createdAt])
-  @@index([region])
-  @@index([state])
-  @@index([ffo])
-  @@index([department])
-  @@index([type])
-  @@index([status])
-}
-
-model SubmissionImage {
-  id           String     @id @default(cuid())
-  submissionId String
-  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  fileName     String
-  storedName   String
-  filePath     String
-  publicUrl    String
-  mimeType     String?
-  sizeBytes    Int?
-  sortOrder    Int        @default(0)
-  createdAt    DateTime   @default(now())
-
-  @@index([submissionId])
+    return {
+      id: String(payload.id),
+      email: String(payload.email),
+      name: payload.name ? String(payload.name) : null,
+      role: String(payload.role),
+      department: payload.department ? String(payload.department) : null,
+    };
+  } catch {
+    return null;
+  }
 }
