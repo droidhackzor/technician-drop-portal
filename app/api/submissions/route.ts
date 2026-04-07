@@ -54,6 +54,10 @@ function getUploadRoot() {
     : path.resolve(process.cwd(), 'uploads');
 }
 
+function canManageAll(role?: string | null, department?: string | null) {
+  return role === 'LEADERSHIP' || department === 'SUPERVISORS';
+}
+
 export async function GET() {
   try {
     const session = await getSession();
@@ -84,7 +88,16 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ submissions });
+    return NextResponse.json({
+      submissions,
+      viewer: {
+        id: session.id,
+        role: session.role,
+        department: session.department ?? null,
+        canDelete: canManageAll(session.role, session.department),
+        canManageAll: canManageAll(session.role, session.department),
+      },
+    });
   } catch (error) {
     console.error('GET /api/submissions failed:', error);
     return NextResponse.json({ error: 'Failed to load submissions' }, { status: 500 });
