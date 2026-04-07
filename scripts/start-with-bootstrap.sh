@@ -1,13 +1,15 @@
-#!/bin/sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
 echo "[startup] running Prisma migrations"
-npx prisma migrate deploy
+./node_modules/prisma/build/index.js migrate deploy
 
-if [ "${SEED_ON_STARTUP:-true}" = "true" ]; then
-  echo "[startup] seeding demo users"
-  npm run prisma:seed
+echo "[startup] seeding demo users if needed"
+if [ -f "./prisma/seed.js" ]; then
+  node ./prisma/seed.js || true
+elif [ -f "./prisma/seed.ts" ]; then
+  npx tsx ./prisma/seed.ts || true
 fi
 
-echo "[startup] starting Next.js"
-exec node server.js
+echo "[startup] starting app"
+node server.js
