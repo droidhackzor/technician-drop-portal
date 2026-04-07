@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  TECHNICIAN
+  LEADERSHIP
+}
+
+enum SubmissionType {
+  CUT_DROP
+  TRAPPED_DROP
+  HAZARDOUS_DROP
+}
+
+enum Department {
+  FULFILLMENT
+  LINE
+  SUPERVISORS
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  fullName     String
+  role         UserRole
+  createdAt    DateTime     @default(now())
+  submissions  Submission[]
+}
+
+model Submission {
+  id               String         @id @default(cuid())
+  type             SubmissionType
+  region           String
+  state            String
+  ffo              String
+  department       Department
+  houseAddress     String
+  metadataAddress  String?
+  gpsLat           Decimal?       @db.Decimal(10, 7)
+  gpsLng           Decimal?       @db.Decimal(10, 7)
+  gpsText          String?
+  capturedAt       DateTime?
+  metadataJson     Json?
+  notes            String?
+  submittedAt      DateTime       @default(now())
+  submittedBy      User           @relation(fields: [submittedById], references: [id])
+  submittedById    String
+  photos           Photo[]
+
+  @@index([submittedAt(sort: Desc)])
+  @@index([houseAddress])
+  @@index([metadataAddress])
+  @@index([gpsText])
+  @@index([region, state, ffo])
+}
+
+model Photo {
+  id            String      @id @default(cuid())
+  originalName  String
+  filePath      String
+  mimeType      String
+  sizeBytes     Int
+  createdAt     DateTime    @default(now())
+  submission    Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submissionId  String
+}
