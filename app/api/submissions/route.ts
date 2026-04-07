@@ -1,19 +1,50 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { Department, SubmissionType, Prisma } from '@prisma/client';
+import { Department, Prisma, SubmissionType } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { extractPhotoMetadata } from '@/lib/photo-metadata';
 
-const schema = z.object({
+const submissionSchema = z.object({
   type: z.enum(['CUT_DROP', 'TRAPPED_DROP', 'HAZARDOUS_DROP']),
   department: z.enum(['FULFILLMENT', 'LINE', 'SUPERVISORS']),
-  region: z.string(),
-  state: z.string(),
-  ffo: z.string(),
+  region: z.string().min(1),
+  state: z.string().min(1),
+  ffo: z.string().min(1),
   address: z.string().optional(),
   notes: z.string().optional(),
 });
+
+export async function GET() {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const submissions = await prisma.submission.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        submittedBy: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({ submissions });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: 'Failed to load submissions' },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +55,7 @@ export async function POST(req: Request) {
 
     const formData = await req.formData();
 
-    const parsed = schema.safeParse({
+    const parsed = submissionSchema.safeParse({
       type: formData.get('type'),
       department: formData.get('department'),
       region: formData.get('region'),
@@ -35,13 +66,19 @@ export async function POST(req: Request) {
     });
 
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid submission payload', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
 
     const files = formData.getAll('files') as File[];
 
-    if (!files || files.length === 0) {
-      return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
+    if (!files.length) {
+      return NextResponse.json(
+        { error: 'Please upload at least one file' },
+        { status: 400 }
+      );
     }
 
     const metadataResults = await Promise.all(
@@ -54,9 +91,11 @@ export async function POST(req: Request) {
     const primaryMetadata = metadataResults[0];
 
     const gpsText =
-      primaryMetadata.latitude && primaryMetadata.longitude
+      primaryMetadata.gpsText ||
+      (typeof primaryMetadata.latitude === 'number' &&
+      typeof primaryMetadata.longitude === 'number'
         ? `${primaryMetadata.latitude}, ${primaryMetadata.longitude}`
-        : undefined;
+        : undefined);
 
     const submission = await prisma.submission.create({
       data: {
@@ -65,22 +104,24 @@ export async function POST(req: Request) {
         region: parsed.data.region,
         state: parsed.data.state,
         ffo: parsed.data.ffo,
-        address:
-          parsed.data.address ||
-          primaryMetadata.address ||
-          'Unknown address',
+        address: parsed.data.address || primaryMetadata.address || undefined,
         latitude: primaryMetadata.latitude,
         longitude: primaryMetadata.longitude,
         gpsText,
         capturedAt: primaryMetadata.capturedAt
           ? new Date(primaryMetadata.capturedAt)
           : undefined,
-
-        // ✅ FIXED LINE
-        metadataJson: primaryMetadata.raw as Prisma.InputJsonValue,
-
+        metadataJson: (primaryMetadata.raw || {}) as Prisma.InputJsonValue,
         notes: parsed.data.notes || undefined,
         submittedById: session.id,
+      },
+      include: {
+        submittedBy: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
       },
     });
 
