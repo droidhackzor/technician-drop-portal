@@ -27,13 +27,25 @@ type MetadataResponse = {
   capturedAt?: string;
 };
 
+const typeOptions = [
+  { value: 'CUT_DROP', label: 'Cut Drop' },
+  { value: 'TRAPPED_DROP', label: 'Trapped Drop' },
+  { value: 'HAZARDOUS_DROP', label: 'Hazardous Drop' },
+] as const;
+
+const departmentOptions = [
+  { value: 'FULFILLMENT', label: 'Fulfillment' },
+  { value: 'LINE', label: 'Line' },
+  { value: 'SUPERVISORS', label: 'Supervisors' },
+] as const;
+
 const typeLabels: Record<Submission['type'], string> = {
   CUT_DROP: 'Cut Drop',
   TRAPPED_DROP: 'Trapped Drop',
   HAZARDOUS_DROP: 'Hazardous Drop',
 };
 
-const deptLabels: Record<Submission['department'], string> = {
+const departmentLabels: Record<Submission['department'], string> = {
   FULFILLMENT: 'Fulfillment',
   LINE: 'Line',
   SUPERVISORS: 'Supervisors',
@@ -42,26 +54,30 @@ const deptLabels: Record<Submission['department'], string> = {
 export default function DashboardPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [type, setType] = useState<Submission['type']>('CUT_DROP');
-  const [department, setDepartment] = useState<Submission['department']>('FULFILLMENT');
+  const [department, setDepartment] =
+    useState<Submission['department']>('FULFILLMENT');
   const [region, setRegion] = useState('Mountain West');
   const [stateName, setStateName] = useState('Colorado');
   const [ffo, setFfo] = useState('Denver North');
   const [address, setAddress] = useState('');
   const [gpsText, setGpsText] = useState('');
   const [notes, setNotes] = useState('');
+  const [metadataPreview, setMetadataPreview] =
+    useState<MetadataResponse | null>(null);
+
+  const [loading, setLoading] = useState(true);
   const [extracting, setExtracting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [search, setSearch] = useState('');
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [metadataPreview, setMetadataPreview] = useState<MetadataResponse | null>(null);
 
   async function loadSubmissions() {
     try {
       setLoading(true);
-      setError('');
       const res = await fetch('/api/submissions', { cache: 'no-store' });
       const data = await res.json();
 
@@ -102,15 +118,15 @@ export default function DashboardPage() {
         throw new Error(data?.error || 'Failed to extract metadata');
       }
 
-      const parsed = data as MetadataResponse;
-      setMetadataPreview(parsed);
+      const meta = data as MetadataResponse;
+      setMetadataPreview(meta);
 
-      if (parsed.address) setAddress(parsed.address);
+      if (meta.address) setAddress(meta.address);
 
       const gps =
-        parsed.gpsText ||
-        (typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number'
-          ? `${parsed.latitude}, ${parsed.longitude}`
+        meta.gpsText ||
+        (typeof meta.latitude === 'number' && typeof meta.longitude === 'number'
+          ? `${meta.latitude}, ${meta.longitude}`
           : '');
 
       if (gps) setGpsText(gps);
@@ -124,7 +140,8 @@ export default function DashboardPage() {
   async function handleFileChange(nextFiles: FileList | null) {
     const selected = nextFiles ? Array.from(nextFiles) : [];
     setFiles(selected);
-    if (selected.length) {
+
+    if (selected.length > 0) {
       await extractMetadata(selected);
     } else {
       setMetadataPreview(null);
@@ -137,7 +154,7 @@ export default function DashboardPage() {
     setSuccess('');
 
     if (!files.length) {
-      setError('Please select at least one photo.');
+      setError('Please upload at least one photo.');
       return;
     }
 
@@ -187,23 +204,22 @@ export default function DashboardPage() {
     window.location.href = '/login';
   }
 
-  const filtered = useMemo(() => {
+  const filteredSubmissions = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return submissions;
 
-    return submissions.filter((item) => {
+    return submissions.filter((submission) => {
       const haystack = [
-        item.id,
-        item.address,
-        item.gpsText,
-        item.region,
-        item.state,
-        item.ffo,
-        item.notes,
-        item.submittedBy?.email,
-        item.submittedBy?.name,
-        typeLabels[item.type],
-        deptLabels[item.department],
+        submission.address,
+        submission.gpsText,
+        submission.region,
+        submission.state,
+        submission.ffo,
+        submission.notes,
+        submission.submittedBy?.name,
+        submission.submittedBy?.email,
+        typeLabels[submission.type],
+        departmentLabels[submission.department],
       ]
         .filter(Boolean)
         .join(' ')
@@ -211,51 +227,64 @@ export default function DashboardPage() {
 
       return haystack.includes(q);
     });
-  }, [submissions, search]);
+  }, [search, submissions]);
 
   return (
-    <main className="linear-shell">
+    <main className="min-h-screen bg-[#f4f5f8] text-zinc-900">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="linear-topbar mb-6 flex flex-col gap-4 px-6 py-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="linear-badge mb-3">Cable Ops Portal</div>
-            <h1 className="linear-page-title">Technician Drop Portal</h1>
-            <p className="mt-2 text-sm linear-muted">
-              Upload field photos, review metadata, and track cut, trapped, and hazardous drops.
-            </p>
-          </div>
+        <div className="mb-6 rounded-[28px] border border-zinc-200 bg-white px-6 py-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="mb-3 inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
+                Linear-style field operations
+              </div>
+              <h1 className="text-3xl font-semibold tracking-[-0.04em] text-zinc-950">
+                Technician Drop Portal
+              </h1>
+              <p className="mt-2 text-sm text-zinc-500">
+                Submit cut, trapped, and hazardous drop reports with metadata-rich photos.
+              </p>
+            </div>
 
-          <button onClick={handleLogout} className="linear-button secondary">
-            Sign out
-          </button>
+            <button
+              onClick={handleLogout}
+              className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
-          <section className="linear-card p-5">
+          <section className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
             <div className="mb-5">
-              <h2 className="linear-section-title">New submission</h2>
-              <p className="mt-1 text-sm linear-muted">
-                Add one or more photos and submit a new report.
+              <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">
+                New submission
+              </h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                Add one or more photos and create a new field report.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="rounded-[22px] border border-dashed border-zinc-300 bg-white/70 p-4">
-                <label className="linear-label">Photos</label>
+              <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-4">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
+                  Photos
+                </label>
                 <input
                   type="file"
                   accept="image/*"
                   multiple
                   onChange={(e) => void handleFileChange(e.target.files)}
-                  className="linear-input"
+                  className="block w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm"
                 />
-                <p className="mt-2 text-xs linear-muted">
+                <p className="mt-2 text-xs text-zinc-500">
                   Multiple files supported. Metadata preview uses the first image.
                 </p>
 
                 {files.length > 0 && (
-                  <div className="mt-3 rounded-2xl border border-zinc-200 bg-white p-3">
-                    <div className="mb-2 text-sm font-semibold text-zinc-800">
+                  <div className="mt-3 rounded-xl border border-zinc-200 bg-white p-3">
+                    <div className="mb-2 text-sm font-medium text-zinc-800">
                       {files.length} file(s) selected
                     </div>
                     <ul className="space-y-1 text-sm text-zinc-600">
@@ -269,104 +298,96 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="linear-label">Issue Type</label>
-                  <select
-                    value={type}
-                    onChange={(e) => setType(e.target.value as Submission['type'])}
-                    className="linear-input"
-                  >
-                    <option value="CUT_DROP">Cut Drop</option>
-                    <option value="TRAPPED_DROP">Trapped Drop</option>
-                    <option value="HAZARDOUS_DROP">Hazardous Drop</option>
-                  </select>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
+                  Issue Type
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {typeOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setType(option.value)}
+                      className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
+                        type === option.value
+                          ? 'border-zinc-900 bg-zinc-900 text-white'
+                          : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                <div>
-                  <label className="linear-label">Department</label>
-                  <select
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value as Submission['department'])}
-                    className="linear-input"
-                  >
-                    <option value="FULFILLMENT">Fulfillment</option>
-                    <option value="LINE">Line</option>
-                    <option value="SUPERVISORS">Supervisors</option>
-                  </select>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
+                  Department
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {departmentOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setDepartment(option.value)}
+                      className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
+                        department === option.value
+                          ? 'border-zinc-900 bg-zinc-900 text-white'
+                          : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
-                <div>
-                  <label className="linear-label">Region</label>
-                  <input
-                    value={region}
-                    onChange={(e) => setRegion(e.target.value)}
-                    className="linear-input"
-                  />
-                </div>
-
-                <div>
-                  <label className="linear-label">State</label>
-                  <input
-                    value={stateName}
-                    onChange={(e) => setStateName(e.target.value)}
-                    className="linear-input"
-                  />
-                </div>
-
-                <div>
-                  <label className="linear-label">FFO</label>
-                  <input
-                    value={ffo}
-                    onChange={(e) => setFfo(e.target.value)}
-                    className="linear-input"
-                  />
-                </div>
+                <Field label="Region" value={region} onChange={setRegion} />
+                <Field label="State" value={stateName} onChange={setStateName} />
+                <Field label="FFO" value={ffo} onChange={setFfo} />
               </div>
 
-              <div>
-                <label className="linear-label">Address</label>
-                <input
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Metadata or manual address"
-                  className="linear-input"
-                />
-              </div>
+              <Field
+                label="Address"
+                value={address}
+                onChange={setAddress}
+                placeholder="Metadata or manual address"
+              />
+
+              <Field
+                label="GPS"
+                value={gpsText}
+                onChange={setGpsText}
+                placeholder="Latitude, Longitude"
+              />
 
               <div>
-                <label className="linear-label">GPS</label>
-                <input
-                  value={gpsText}
-                  onChange={(e) => setGpsText(e.target.value)}
-                  placeholder="Latitude, Longitude"
-                  className="linear-input"
-                />
-              </div>
-
-              <div>
-                <label className="linear-label">Notes</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
+                  Notes
+                </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={4}
                   placeholder="Additional field notes"
-                  className="linear-input"
+                  className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-100"
                 />
               </div>
 
-              <div className="rounded-[22px] border border-zinc-200 bg-white/70 p-4">
+              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-zinc-800">Metadata Preview</h3>
-                  {extracting ? <span className="text-xs linear-muted">Extracting...</span> : null}
+                  <h3 className="text-sm font-semibold text-zinc-900">Metadata Preview</h3>
+                  {extracting ? (
+                    <span className="text-xs text-zinc-500">Extracting...</span>
+                  ) : null}
                 </div>
 
                 {metadataPreview ? (
                   <div className="space-y-1 text-sm text-zinc-700">
                     <div>
-                      <span className="font-medium">Address:</span> {metadataPreview.address || 'Not found'}
+                      <span className="font-medium">Address:</span>{' '}
+                      {metadataPreview.address || 'Not found'}
                     </div>
                     <div>
                       <span className="font-medium">GPS:</span>{' '}
@@ -377,11 +398,12 @@ export default function DashboardPage() {
                           : 'Not found')}
                     </div>
                     <div>
-                      <span className="font-medium">Captured:</span> {metadataPreview.capturedAt || 'Not found'}
+                      <span className="font-medium">Captured:</span>{' '}
+                      {metadataPreview.capturedAt || 'Not found'}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm linear-muted">
+                  <p className="text-sm text-zinc-500">
                     Select a photo to preview embedded metadata.
                   </p>
                 )}
@@ -399,17 +421,23 @@ export default function DashboardPage() {
                 </div>
               ) : null}
 
-              <button type="submit" disabled={submitting} className="linear-button w-full">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:opacity-60"
+              >
                 {submitting ? 'Submitting...' : 'Create Submission'}
               </button>
             </form>
           </section>
 
-          <section className="linear-card p-5">
+          <section className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="linear-section-title">Recent submissions</h2>
-                <p className="mt-1 text-sm linear-muted">
+                <h2 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">
+                  Recent submissions
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500">
                   Search by address, GPS, FFO, notes, or technician.
                 </p>
               </div>
@@ -418,51 +446,86 @@ export default function DashboardPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search submissions"
-                className="linear-input sm:max-w-sm"
+                className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-100 sm:max-w-sm"
               />
             </div>
 
-            <div className="linear-table-wrap">
+            <div className="overflow-hidden rounded-[22px] border border-zinc-200">
               <div className="overflow-x-auto">
-                <table className="linear-table">
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>Department</th>
-                      <th>Address</th>
-                      <th>GPS</th>
-                      <th>Region</th>
-                      <th>State</th>
-                      <th>FFO</th>
-                      <th>Submitted</th>
-                      <th>Technician</th>
+                <table className="min-w-full">
+                  <thead className="bg-zinc-50">
+                    <tr className="text-left">
+                      {[
+                        'Type',
+                        'Department',
+                        'Address',
+                        'GPS',
+                        'Region',
+                        'State',
+                        'FFO',
+                        'Submitted',
+                        'Technician',
+                      ].map((heading) => (
+                        <th
+                          key={heading}
+                          className="border-b border-zinc-200 px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500"
+                        >
+                          {heading}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={9} className="text-center text-zinc-500">
+                        <td
+                          colSpan={9}
+                          className="px-4 py-10 text-center text-sm text-zinc-500"
+                        >
                           Loading submissions...
                         </td>
                       </tr>
-                    ) : filtered.length === 0 ? (
+                    ) : filteredSubmissions.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="text-center text-zinc-500">
+                        <td
+                          colSpan={9}
+                          className="px-4 py-10 text-center text-sm text-zinc-500"
+                        >
                           No submissions found
                         </td>
                       </tr>
                     ) : (
-                      filtered.map((submission) => (
-                        <tr key={submission.id}>
-                          <td>{typeLabels[submission.type]}</td>
-                          <td>{deptLabels[submission.department]}</td>
-                          <td>{submission.address || '—'}</td>
-                          <td>{submission.gpsText || '—'}</td>
-                          <td>{submission.region}</td>
-                          <td>{submission.state}</td>
-                          <td>{submission.ffo}</td>
-                          <td>{new Date(submission.createdAt).toLocaleString()}</td>
-                          <td>{submission.submittedBy?.name || submission.submittedBy?.email || '—'}</td>
+                      filteredSubmissions.map((submission) => (
+                        <tr key={submission.id} className="hover:bg-zinc-50">
+                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
+                            {typeLabels[submission.type]}
+                          </td>
+                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
+                            {departmentLabels[submission.department]}
+                          </td>
+                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
+                            {submission.address || '—'}
+                          </td>
+                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
+                            {submission.gpsText || '—'}
+                          </td>
+                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
+                            {submission.region}
+                          </td>
+                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
+                            {submission.state}
+                          </td>
+                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
+                            {submission.ffo}
+                          </td>
+                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
+                            {new Date(submission.createdAt).toLocaleString()}
+                          </td>
+                          <td className="border-b border-zinc-100 px-4 py-4 text-sm text-zinc-900">
+                            {submission.submittedBy?.name ||
+                              submission.submittedBy?.email ||
+                              '—'}
+                          </td>
                         </tr>
                       ))
                     )}
@@ -474,5 +537,31 @@ export default function DashboardPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
+        {label}
+      </label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-100"
+      />
+    </div>
   );
 }
