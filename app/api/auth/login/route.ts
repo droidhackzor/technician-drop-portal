@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { login } from '@/lib/auth';
+import { authenticateUser, createSessionToken } from '@/lib/auth';
 
 const schema = z.object({
   email: z.string().email(),
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = await login(parsed.data.email, parsed.data.password);
+    const user = await authenticateUser(parsed.data.email, parsed.data.password);
 
     if (!user) {
       return NextResponse.json(
@@ -28,15 +28,24 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({
+    const token = await createSessionToken(user);
+
+    const response = NextResponse.json({
       success: true,
       user,
     });
+
+    response.cookies.set('session', token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return response;
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { error: 'Login failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Login failed' }, { status: 500 });
   }
 }
