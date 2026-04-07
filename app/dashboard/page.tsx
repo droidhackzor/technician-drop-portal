@@ -2,6 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+type SubmissionImage = {
+  id: string;
+  fileName: string;
+  publicUrl: string;
+  mimeType?: string | null;
+  sizeBytes?: number | null;
+  sortOrder: number;
+};
+
 type Submission = {
   id: string;
   type: 'CUT_DROP' | 'TRAPPED_DROP' | 'HAZARDOUS_DROP';
@@ -13,6 +22,7 @@ type Submission = {
   gpsText?: string | null;
   notes?: string | null;
   createdAt: string;
+  images: SubmissionImage[];
   submittedBy?: {
     email?: string | null;
     name?: string | null;
@@ -71,6 +81,7 @@ export default function DashboardPage() {
 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [search, setSearch] = useState('');
+  const [previewImage, setPreviewImage] = useState<SubmissionImage | null>(null);
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -420,56 +431,77 @@ export default function DashboardPage() {
                 <table style={styles.table}>
                   <thead>
                     <tr>
-                      {[
-                        'Type',
-                        'Department',
-                        'Address',
-                        'GPS',
-                        'Region',
-                        'State',
-                        'FFO',
-                        'Submitted',
-                        'Technician',
-                      ].map((heading) => (
-                        <th key={heading} style={styles.th}>
-                          {heading}
-                        </th>
-                      ))}
+                      <th style={styles.th}>Preview</th>
+                      <th style={styles.th}>Type</th>
+                      <th style={styles.th}>Department</th>
+                      <th style={styles.th}>Address</th>
+                      <th style={styles.th}>GPS</th>
+                      <th style={styles.th}>Region</th>
+                      <th style={styles.th}>State</th>
+                      <th style={styles.th}>FFO</th>
+                      <th style={styles.th}>Submitted</th>
+                      <th style={styles.th}>Technician</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={9} style={styles.emptyCell}>
+                        <td colSpan={10} style={styles.emptyCell}>
                           Loading submissions...
                         </td>
                       </tr>
                     ) : filteredSubmissions.length === 0 ? (
                       <tr>
-                        <td colSpan={9} style={styles.emptyCell}>
+                        <td colSpan={10} style={styles.emptyCell}>
                           No submissions found
                         </td>
                       </tr>
                     ) : (
-                      filteredSubmissions.map((submission) => (
-                        <tr key={submission.id}>
-                          <td style={styles.td}>{typeLabels[submission.type]}</td>
-                          <td style={styles.td}>{departmentLabels[submission.department]}</td>
-                          <td style={styles.td}>{submission.address || '—'}</td>
-                          <td style={styles.td}>{submission.gpsText || '—'}</td>
-                          <td style={styles.td}>{submission.region}</td>
-                          <td style={styles.td}>{submission.state}</td>
-                          <td style={styles.td}>{submission.ffo}</td>
-                          <td style={styles.td}>
-                            {new Date(submission.createdAt).toLocaleString()}
-                          </td>
-                          <td style={styles.td}>
-                            {submission.submittedBy?.name ||
-                              submission.submittedBy?.email ||
-                              '—'}
-                          </td>
-                        </tr>
-                      ))
+                      filteredSubmissions.map((submission) => {
+                        const preview = submission.images?.[0];
+
+                        return (
+                          <tr key={submission.id}>
+                            <td style={styles.td}>
+                              {preview ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewImage(preview)}
+                                  style={styles.thumbButton}
+                                >
+                                  <img
+                                    src={preview.publicUrl}
+                                    alt={preview.fileName}
+                                    style={styles.thumbImage}
+                                  />
+                                  {submission.images.length > 1 ? (
+                                    <span style={styles.thumbCount}>
+                                      +{submission.images.length - 1}
+                                    </span>
+                                  ) : null}
+                                </button>
+                              ) : (
+                                <div style={styles.noThumb}>—</div>
+                              )}
+                            </td>
+                            <td style={styles.td}>{typeLabels[submission.type]}</td>
+                            <td style={styles.td}>{departmentLabels[submission.department]}</td>
+                            <td style={styles.td}>{submission.address || '—'}</td>
+                            <td style={styles.td}>{submission.gpsText || '—'}</td>
+                            <td style={styles.td}>{submission.region}</td>
+                            <td style={styles.td}>{submission.state}</td>
+                            <td style={styles.td}>{submission.ffo}</td>
+                            <td style={styles.td}>
+                              {new Date(submission.createdAt).toLocaleString()}
+                            </td>
+                            <td style={styles.td}>
+                              {submission.submittedBy?.name ||
+                                submission.submittedBy?.email ||
+                                '—'}
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -478,6 +510,30 @@ export default function DashboardPage() {
           </section>
         </div>
       </div>
+
+      {previewImage ? (
+        <div style={styles.modalBackdrop} onClick={() => setPreviewImage(null)}>
+          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <div style={styles.modalTitle}>{previewImage.fileName}</div>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                style={styles.secondaryButton}
+              >
+                Close
+              </button>
+            </div>
+            <div style={styles.modalImageWrap}>
+              <img
+                src={previewImage.publicUrl}
+                alt={previewImage.fileName}
+                style={styles.modalImage}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
@@ -762,7 +818,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   table: {
     width: '100%',
-    minWidth: 980,
+    minWidth: 1100,
     borderCollapse: 'collapse',
   },
   th: {
@@ -790,5 +846,91 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'center',
     color: '#6b7280',
     fontSize: 14,
+  },
+  thumbButton: {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    overflow: 'hidden',
+    border: '1px solid rgba(15,23,42,0.08)',
+    background: '#f8fafc',
+    cursor: 'pointer',
+    padding: 0,
+  },
+  thumbImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
+  },
+  thumbCount: {
+    position: 'absolute',
+    right: 6,
+    bottom: 6,
+    background: 'rgba(17,24,39,0.88)',
+    color: '#fff',
+    borderRadius: 999,
+    padding: '2px 6px',
+    fontSize: 11,
+    fontWeight: 700,
+  },
+  noThumb: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    border: '1px solid rgba(15,23,42,0.08)',
+    background: '#f8fafc',
+    display: 'grid',
+    placeItems: 'center',
+    color: '#9ca3af',
+    fontWeight: 700,
+  },
+  modalBackdrop: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(15,23,42,0.55)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    zIndex: 50,
+  },
+  modalCard: {
+    width: 'min(100%, 980px)',
+    background: '#fff',
+    borderRadius: 24,
+    border: '1px solid rgba(15,23,42,0.08)',
+    boxShadow: '0 20px 60px rgba(15,23,42,0.25)',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 16,
+    padding: 16,
+    borderBottom: '1px solid rgba(15,23,42,0.08)',
+  },
+  modalTitle: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: '#111827',
+  },
+  modalImageWrap: {
+    background: '#0f172a',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    maxHeight: '80vh',
+  },
+  modalImage: {
+    maxWidth: '100%',
+    maxHeight: '80vh',
+    objectFit: 'contain',
+    display: 'block',
   },
 };
