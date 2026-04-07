@@ -21,6 +21,10 @@ type Submission = {
   address?: string | null;
   gpsText?: string | null;
   notes?: string | null;
+  status: 'OPEN' | 'COMPLETE' | 'NOT_VALID';
+  statusNote?: string | null;
+  statusUpdatedAt?: string | null;
+  statusUpdatedByName?: string | null;
   createdAt: string;
   images: SubmissionImage[];
   submittedBy?: {
@@ -35,6 +39,14 @@ type MetadataResponse = {
   gpsText?: string;
   address?: string;
   capturedAt?: string;
+};
+
+type Viewer = {
+  id: string;
+  role: string;
+  department?: string | null;
+  canDelete: boolean;
+  canManageAll: boolean;
 };
 
 const typeOptions = [
@@ -61,6 +73,12 @@ const departmentLabels: Record<Submission['department'], string> = {
   SUPERVISORS: 'Supervisors',
 };
 
+const statusLabels: Record<Submission['status'], string> = {
+  OPEN: 'Open',
+  COMPLETE: 'Complete',
+  NOT_VALID: 'Not Valid',
+};
+
 export default function DashboardPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [type, setType] = useState<Submission['type']>('CUT_DROP');
@@ -80,8 +98,16 @@ export default function DashboardPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [viewer, setViewer] = useState<Viewer | null>(null);
   const [search, setSearch] = useState('');
   const [previewImage, setPreviewImage] = useState<SubmissionImage | null>(null);
+
+  const [statusModal, setStatusModal] = useState<{
+    submission: Submission;
+    nextStatus: 'COMPLETE' | 'NOT_VALID' | 'OPEN';
+  } | null>(null);
+  const [statusNote, setStatusNote] = useState('');
+  const [statusSaving, setStatusSaving] = useState(false);
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -98,6 +124,7 @@ export default function DashboardPage() {
       }
 
       setSubmissions(Array.isArray(data?.submissions) ? data.submissions : []);
+      setViewer(data?.viewer ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load submissions');
     } finally {
@@ -216,6 +243,77 @@ export default function DashboardPage() {
     window.location.href = '/login';
   }
 
+  async function handleDelete(submission: Submission) {
+    const confirmed = window.confirm(
+      `Delete submission at ${submission.address || submission.gpsText || submission.id}?`
+    );
+    if (!confirmed) return;
+
+    try {
+      setError('');
+      setSuccess('');
+
+      const res = await fetch(`/api/submissions/${submission.id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || 'Failed to delete submission');
+      }
+
+      setSuccess('Submission deleted.');
+      await loadSubmissions();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete submission');
+    }
+  }
+
+  function openStatusModal(
+    submission: Submission,
+    nextStatus: 'COMPLETE' | 'NOT_VALID' | 'OPEN'
+  ) {
+    setStatusModal({ submission, nextStatus });
+    setStatusNote('');
+  }
+
+  async function saveStatus() {
+    if (!statusModal) return;
+
+    try {
+      setStatusSaving(true);
+      setError('');
+      setSuccess('');
+
+      const res = await fetch(`/api/submissions/${statusModal.submission.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: statusModal.nextStatus,
+          statusNote,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || 'Failed to update submission');
+      }
+
+      setSuccess(`Submission marked ${statusLabels[statusModal.nextStatus].toLowerCase()}.`);
+      setStatusModal(null);
+      setStatusNote('');
+      await loadSubmissions();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update submission');
+    } finally {
+      setStatusSaving(false);
+    }
+  }
+
   const filteredSubmissions = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return submissions;
@@ -228,6 +326,8 @@ export default function DashboardPage() {
         submission.state,
         submission.ffo,
         submission.notes,
+        submission.status,
+        submission.statusNote,
         submission.submittedBy?.name,
         submission.submittedBy?.email,
         typeLabels[submission.type],
@@ -240,6 +340,11 @@ export default function DashboardPage() {
       return haystack.includes(q);
     });
   }, [search, submissions]);
+
+  const technicianNeedsNote =
+    statusModal &&
+    !viewer?.canManageAll &&
+    (statusModal.nextStatus === 'COMPLETE' || statusModal.nextStatus === 'NOT_VALID');
 
   return (
     <main style={styles.page}>
@@ -433,6 +538,7 @@ export default function DashboardPage() {
                     <tr>
                       <th style={styles.th}>Preview</th>
                       <th style={styles.th}>Type</th>
+                      <th style={styles.th}>Status</th>
                       <th style={styles.th}>Department</th>
                       <th style={styles.th}>Address</th>
                       <th style={styles.th}>GPS</th>
@@ -441,18 +547,19 @@ export default function DashboardPage() {
                       <th style={styles.th}>FFO</th>
                       <th style={styles.th}>Submitted</th>
                       <th style={styles.th}>Technician</th>
+                      <th style={styles.th}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={10} style={styles.emptyCell}>
+                        <td colSpan={12} style={styles.emptyCell}>
                           Loading submissions...
                         </td>
                       </tr>
                     ) : filteredSubmissions.length === 0 ? (
                       <tr>
-                        <td colSpan={10} style={styles.emptyCell}>
+                        <td colSpan={12} style={styles.emptyCell}>
                           No submissions found
                         </td>
                       </tr>
@@ -485,6 +592,25 @@ export default function DashboardPage() {
                               )}
                             </td>
                             <td style={styles.td}>{typeLabels[submission.type]}</td>
+                            <td style={styles.td}>
+                              <span
+                                style={{
+                                  ...styles.statusPill,
+                                  ...(submission.status === 'OPEN'
+                                    ? styles.statusOpen
+                                    : submission.status === 'COMPLETE'
+                                    ? styles.statusComplete
+                                    : styles.statusInvalid),
+                                }}
+                              >
+                                {statusLabels[submission.status]}
+                              </span>
+                              {submission.statusNote ? (
+                                <div style={styles.statusNote}>
+                                  {submission.statusNote}
+                                </div>
+                              ) : null}
+                            </td>
                             <td style={styles.td}>{departmentLabels[submission.department]}</td>
                             <td style={styles.td}>{submission.address || '—'}</td>
                             <td style={styles.td}>{submission.gpsText || '—'}</td>
@@ -498,6 +624,44 @@ export default function DashboardPage() {
                               {submission.submittedBy?.name ||
                                 submission.submittedBy?.email ||
                                 '—'}
+                            </td>
+                            <td style={styles.td}>
+                              <div style={styles.actionStack}>
+                                <button
+                                  type="button"
+                                  onClick={() => openStatusModal(submission, 'COMPLETE')}
+                                  style={styles.smallButton}
+                                >
+                                  Complete
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => openStatusModal(submission, 'NOT_VALID')}
+                                  style={styles.smallButton}
+                                >
+                                  Not Valid
+                                </button>
+
+                                {viewer?.canManageAll ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => openStatusModal(submission, 'OPEN')}
+                                    style={styles.smallButton}
+                                  >
+                                    Reopen
+                                  </button>
+                                ) : null}
+
+                                {viewer?.canDelete ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleDelete(submission)}
+                                    style={styles.deleteButton}
+                                  >
+                                    Delete
+                                  </button>
+                                ) : null}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -530,6 +694,51 @@ export default function DashboardPage() {
                 alt={previewImage.fileName}
                 style={styles.modalImage}
               />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {statusModal ? (
+        <div style={styles.modalBackdrop} onClick={() => setStatusModal(null)}>
+          <div style={styles.statusModalCard} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <div style={styles.modalTitle}>
+                Mark submission {statusLabels[statusModal.nextStatus].toLowerCase()}
+              </div>
+              <button
+                type="button"
+                onClick={() => setStatusModal(null)}
+                style={styles.secondaryButton}
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div style={styles.statusModalBody}>
+              <p style={styles.sectionText}>
+                {technicianNeedsNote
+                  ? 'Technician action requires field notes.'
+                  : 'Add notes if needed, then save the status change.'}
+              </p>
+
+              <label style={styles.label}>Field Notes</label>
+              <textarea
+                value={statusNote}
+                onChange={(e) => setStatusNote(e.target.value)}
+                rows={5}
+                placeholder="Enter field notes for this status update"
+                style={styles.textarea}
+              />
+
+              <button
+                type="button"
+                onClick={() => void saveStatus()}
+                disabled={statusSaving}
+                style={styles.primaryButton}
+              >
+                {statusSaving ? 'Saving...' : 'Save Status'}
+              </button>
             </div>
           </div>
         </div>
@@ -572,7 +781,7 @@ const styles: Record<string, React.CSSProperties> = {
       'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   shell: {
-    maxWidth: 1280,
+    maxWidth: 1380,
     margin: '0 auto',
     padding: '24px 16px 40px',
   },
@@ -818,7 +1027,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   table: {
     width: '100%',
-    minWidth: 1100,
+    minWidth: 1400,
     borderCollapse: 'collapse',
   },
   th: {
@@ -932,5 +1141,71 @@ const styles: Record<string, React.CSSProperties> = {
     maxHeight: '80vh',
     objectFit: 'contain',
     display: 'block',
+  },
+  statusModalCard: {
+    width: 'min(100%, 560px)',
+    background: '#fff',
+    borderRadius: 24,
+    border: '1px solid rgba(15,23,42,0.08)',
+    boxShadow: '0 20px 60px rgba(15,23,42,0.25)',
+    overflow: 'hidden',
+  },
+  statusModalBody: {
+    padding: 16,
+    display: 'grid',
+    gap: 14,
+  },
+  statusPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    borderRadius: 999,
+    padding: '5px 10px',
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  statusOpen: {
+    background: '#eff6ff',
+    color: '#1d4ed8',
+  },
+  statusComplete: {
+    background: '#f0fdf4',
+    color: '#15803d',
+  },
+  statusInvalid: {
+    background: '#fef2f2',
+    color: '#b91c1c',
+  },
+  statusNote: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#6b7280',
+    whiteSpace: 'normal',
+    lineHeight: 1.45,
+    maxWidth: 220,
+  },
+  actionStack: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+  },
+  smallButton: {
+    borderRadius: 12,
+    border: '1px solid rgba(15,23,42,0.1)',
+    background: '#fff',
+    color: '#111827',
+    fontSize: 12,
+    fontWeight: 700,
+    padding: '8px 10px',
+    cursor: 'pointer',
+  },
+  deleteButton: {
+    borderRadius: 12,
+    border: '1px solid #fecaca',
+    background: '#fff5f5',
+    color: '#b91c1c',
+    fontSize: 12,
+    fontWeight: 700,
+    padding: '8px 10px',
+    cursor: 'pointer',
   },
 };
