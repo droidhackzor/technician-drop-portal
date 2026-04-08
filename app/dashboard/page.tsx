@@ -53,6 +53,8 @@ type BuildInfo = {
   branch: string;
   commit: string;
   lastEditedIso: string;
+  source?: string;
+  error?: string;
 };
 
 const regionOptions = ['Mountain West', 'Front Range', 'Western Slope'];
@@ -166,10 +168,7 @@ export default function DashboardPage() {
       try {
         const res = await fetch('/api/build-info', { cache: 'no-store' });
         const data = (await res.json()) as BuildInfo;
-
-        if (!cancelled) {
-          setBuildInfo(data);
-        }
+        if (!cancelled) setBuildInfo(data);
       } catch (err) {
         console.error('Failed to load build info:', err);
       }
@@ -1039,17 +1038,20 @@ function SelectField({
   return (
     <div>
       <label style={styles.label}>{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={styles.input}
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+      <div style={styles.selectWrap}>
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          style={styles.select}
+        >
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <span style={styles.selectArrow}>▾</span>
+      </div>
     </div>
   );
 }
@@ -1285,6 +1287,33 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px 14px',
     outline: 'none',
     boxSizing: 'border-box',
+  },
+  selectWrap: {
+    position: 'relative',
+  },
+  select: {
+    width: '100%',
+    borderRadius: 16,
+    border: '1px solid rgba(15,23,42,0.1)',
+    background: '#fff',
+    color: '#111827',
+    fontSize: 14,
+    padding: '12px 42px 12px 14px',
+    outline: 'none',
+    boxSizing: 'border-box',
+    appearance: 'none' as const,
+    WebkitAppearance: 'none' as const,
+    MozAppearance: 'none' as const,
+    cursor: 'pointer',
+  },
+  selectArrow: {
+    position: 'absolute',
+    top: '50%',
+    right: 14,
+    transform: 'translateY(-50%)',
+    pointerEvents: 'none',
+    color: '#6b7280',
+    fontSize: 12,
   },
   textarea: {
     width: '100%',
