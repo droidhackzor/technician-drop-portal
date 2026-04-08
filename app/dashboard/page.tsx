@@ -49,6 +49,10 @@ type Viewer = {
   canManageAll: boolean;
 };
 
+const regionOptions = ['Mountain West', 'Front Range', 'Western Slope'];
+const stateOptions = ['Colorado', 'Wyoming', 'Utah'];
+const ffoOptions = ['Denver North', 'Denver South', 'Boulder', 'Grand Junction'];
+
 const typeOptions = [
   { value: 'CUT_DROP', label: 'Cut Drop' },
   { value: 'TRAPPED_DROP', label: 'Trapped Drop' },
@@ -86,9 +90,9 @@ export default function DashboardPage() {
   const [type, setType] = useState<Submission['type']>('CUT_DROP');
   const [department, setDepartment] =
     useState<Submission['department']>('FULFILLMENT');
-  const [region, setRegion] = useState('Mountain West');
-  const [stateName, setStateName] = useState('Colorado');
-  const [ffo, setFfo] = useState('Denver North');
+  const [region, setRegion] = useState(regionOptions[0]);
+  const [stateName, setStateName] = useState(stateOptions[0]);
+  const [ffo, setFfo] = useState(ffoOptions[0]);
   const [address, setAddress] = useState('');
   const [gpsText, setGpsText] = useState('');
   const [notes, setNotes] = useState('');
@@ -332,9 +336,19 @@ export default function DashboardPage() {
 
   const filteredSubmissions = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return submissions;
 
     return submissions.filter((submission) => {
+      const matchesSelectedFilters =
+        submission.region === region &&
+        submission.state === stateName &&
+        submission.ffo === ffo &&
+        submission.department === department &&
+        submission.type === type;
+
+      if (!matchesSelectedFilters) return false;
+
+      if (!q) return true;
+
       const haystack = [
         submission.address,
         submission.gpsText,
@@ -355,7 +369,7 @@ export default function DashboardPage() {
 
       return haystack.includes(q);
     });
-  }, [search, submissions]);
+  }, [search, submissions, region, stateName, ffo, department, type]);
 
   const technicianNeedsNote =
     statusModal &&
@@ -470,7 +484,7 @@ export default function DashboardPage() {
 
                 <div>
                   <label style={styles.label}>Department</label>
-                  <div style={styles.choiceGrid}>
+                  <div style={styles.choiceGridDepartment}>
                     {departmentOptions.map((option) => (
                       <button
                         key={option.value}
@@ -490,9 +504,24 @@ export default function DashboardPage() {
                 </div>
 
                 <div style={isMobile ? styles.stackMobile : styles.threeCol}>
-                  <Field label="Region" value={region} onChange={setRegion} />
-                  <Field label="State" value={stateName} onChange={setStateName} />
-                  <Field label="FFO" value={ffo} onChange={setFfo} />
+                  <SelectField
+                    label="Region"
+                    value={region}
+                    onChange={setRegion}
+                    options={regionOptions}
+                  />
+                  <SelectField
+                    label="State"
+                    value={stateName}
+                    onChange={setStateName}
+                    options={stateOptions}
+                  />
+                  <SelectField
+                    label="FFO"
+                    value={ffo}
+                    onChange={setFfo}
+                    options={ffoOptions}
+                  />
                 </div>
 
                 <Field
@@ -566,7 +595,7 @@ export default function DashboardPage() {
                 <div>
                   <h2 style={styles.sectionTitle}>Recent submissions</h2>
                   <p style={styles.sectionText}>
-                    Search by address, GPS, FFO, notes, or technician.
+                    Showing only {typeLabels[type]} / {departmentLabels[department]} / {region} / {stateName} / {ffo}
                   </p>
                 </div>
 
@@ -935,6 +964,35 @@ function Field({
   );
 }
 
+function SelectField({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+}) {
+  return (
+    <div>
+      <label style={styles.label}>{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={styles.input}
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: '100vh',
@@ -1109,6 +1167,11 @@ const styles: Record<string, React.CSSProperties> = {
   choiceGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+    gap: 8,
+  },
+  choiceGridDepartment: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
     gap: 8,
   },
   choiceButton: {
