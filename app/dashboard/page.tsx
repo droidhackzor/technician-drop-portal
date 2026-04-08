@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { BUILD_INFO } from '@/lib/build-info';
 
 type SubmissionImage = {
   id: string;
@@ -50,23 +49,11 @@ type Viewer = {
   canManageAll: boolean;
 };
 
-function timeAgoFromEpoch(epochSeconds: number) {
-  const now = Date.now();
-  const diffMs = now - epochSeconds * 1000;
-
-  if (diffMs < 60_000) return 'just now';
-
-  const minutes = Math.floor(diffMs / 60_000);
-  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
-
-  const hours = Math.floor(diffMs / 3_600_000);
-  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-
-  const days = Math.floor(diffMs / 86_400_000);
-  if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
-
-  return new Date(epochSeconds * 1000).toLocaleDateString();
-}
+type BuildInfo = {
+  branch: string;
+  commit: string;
+  lastEditedIso: string;
+};
 
 const regionOptions = ['Mountain West', 'Front Range', 'Western Slope'];
 const stateOptions = ['Colorado', 'Wyoming', 'Utah'];
@@ -104,6 +91,26 @@ const statusLabels: Record<Submission['status'], string> = {
   NOT_VALID: 'Not Valid',
 };
 
+function timeAgoFromIso(iso: string) {
+  const timestamp = new Date(iso).getTime();
+  if (Number.isNaN(timestamp)) return 'unknown';
+
+  const diffMs = Date.now() - timestamp;
+
+  if (diffMs < 60_000) return 'just now';
+
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+
+  const hours = Math.floor(diffMs / 3_600_000);
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+
+  const days = Math.floor(diffMs / 86_400_000);
+  if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
+
+  return new Date(timestamp).toLocaleDateString();
+}
+
 export default function DashboardPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [type, setType] = useState<Submission['type']>('CUT_DROP');
@@ -137,6 +144,8 @@ export default function DashboardPage() {
   const [mobileTab, setMobileTab] = useState<'new' | 'recent'>('new');
   const [isMobile, setIsMobile] = useState(false);
 
+  const [buildInfo, setBuildInfo] = useState<BuildInfo | null>(null);
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -148,6 +157,29 @@ export default function DashboardPage() {
     updateIsMobile();
     window.addEventListener('resize', updateIsMobile);
     return () => window.removeEventListener('resize', updateIsMobile);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadBuildInfo() {
+      try {
+        const res = await fetch('/api/build-info', { cache: 'no-store' });
+        const data = (await res.json()) as BuildInfo;
+
+        if (!cancelled) {
+          setBuildInfo(data);
+        }
+      } catch (err) {
+        console.error('Failed to load build info:', err);
+      }
+    }
+
+    void loadBuildInfo();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function loadSubmissions() {
@@ -416,8 +448,11 @@ export default function DashboardPage() {
             </button>
 
             <div style={styles.buildInfo}>
-              Build: {BUILD_INFO.branch}-{BUILD_INFO.commit}-
-              {timeAgoFromEpoch(BUILD_INFO.lastEditedEpoch)}
+              {buildInfo ? (
+                <>Build: {buildInfo.branch}-{buildInfo.commit}-{timeAgoFromIso(buildInfo.lastEditedIso)}</>
+              ) : (
+                <>Build: loading...</>
+              )}
             </div>
           </div>
         </div>
