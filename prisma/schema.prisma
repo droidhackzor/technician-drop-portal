@@ -22,6 +22,7 @@ enum SubmissionType {
   CUT_DROP
   TRAPPED_DROP
   HAZARDOUS_DROP
+  MDU
 }
 
 enum SubmissionStatus {
