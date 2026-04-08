@@ -1,190 +1,253 @@
 # Technician Drop Portal
 
-A standalone full-stack Next.js portal for cable technicians and leadership to upload incident photos, read embedded photo metadata, and search submissions by address, GPS, region, state, FFO, department, and submission date.
+Technician Drop Portal is a full-stack field reporting application designed for technicians, supervisors, and leadership teams to capture, review, and manage field issues such as cut drops, trapped drops, hazardous drops, and MDU-related issues.
 
-## What this does
+---
 
-- Upload one or more photos for a single incident
-- Extract GPS and address-like data from image metadata when available
-- Save searchable incident records in PostgreSQL
-- Sort newest submissions first
-- Filter by region, state, FFO, and department
-- Support technician and leadership logins
-- Run as a standalone Next.js app on standard Linux servers, Docker hosts, and Raspberry Pi-class devices
+## Features
 
-## Stack
+### 📸 Submission Capture
+Create submissions with:
 
-- Next.js 14 App Router
-- PostgreSQL
-- Prisma ORM
-- Cookie-based JWT auth
-- Local file storage for uploads
-- Docker-first deployment with a standalone Next.js runtime
+- Issue type (Cut Drop, Trapped Drop, Hazardous Drop, MDU)
+- Department
+- Region / State / FFO
+- Address
+- GPS coordinates
+- Notes
+- One or more uploaded photos
 
-## Demo accounts
+---
 
-- Technician: `tech@example.com` / `tech1234`
-- Leadership: `leader@example.com` / `leader1234`
+### 🧠 Metadata Extraction
+Automatically extracts from images (when available):
 
-## Metadata behavior
+- GPS coordinates  
+- Timestamp  
+- Device metadata  
+- Address-like data  
 
-The app reads embedded metadata from the **first uploaded image** in a submission and tries to auto-fill:
+---
 
-- GPS latitude and longitude
-- capture timestamp
-- address-style fields when they actually exist in the photo metadata
-- raw metadata JSON for later review
+### 🔄 Workflow Management
 
-GPS is common in phone photos when location tagging is enabled. Full street addresses are **not** consistently stored in standard image metadata, so address auto-fill is best-effort.
+Submission statuses:
 
-## Local development
+- **Open**
+- **Complete**
+- **Not Valid**
 
-1. Copy the environment file:
+#### Technician Permissions
+- Create submissions  
+- View submissions  
+- Mark Complete *(requires notes)*  
+- Mark Not Valid *(requires notes)*  
+
+#### Supervisor / Leadership Permissions
+- All technician permissions  
+- Reopen submissions  
+- Delete submissions  
+
+---
+
+### 🖼 Image System
+- Thumbnail previews  
+- Click-to-expand modal view  
+- Multi-image support per submission  
+
+---
+
+### 📱 Mobile UI
+Mobile-first layout includes:
+
+- **New Submission View**
+- **Recent Submissions View**
+
+---
+
+## Tech Stack
+
+- Next.js 14  
+- React 18  
+- PostgreSQL  
+- Prisma ORM  
+- Zod (validation)  
+- bcryptjs (auth)  
+- JOSE (JWT sessions)  
+- exifr (metadata extraction)  
+
+---
+
+## Installation & Setup
+
+### 1. Clone the Repository
 
 ```bash
-cp .env.example .env
+git clone <your-repo-url>
+cd technician-drop-portal
 ```
 
-2. Start PostgreSQL:
+---
 
-```bash
-docker compose up -d db
-```
-
-3. Install dependencies:
+### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-4. Run migrations and seed demo data:
+---
 
-```bash
-npx prisma migrate deploy
-npm run prisma:seed
+### 3. Environment Variables
+
+Create a `.env` file:
+
+```env
+DATABASE_URL=postgresql://username:password@host:port/dbname
+JWT_SECRET=your-secret-key
+UPLOAD_DIR=./uploads
 ```
 
-5. Start the app:
+---
+
+### 4. Setup Database
+
+Generate Prisma client:
+
+```bash
+npx prisma generate
+```
+
+Push schema to database:
+
+```bash
+npx prisma db push
+```
+
+(Optional) Seed database if applicable:
+
+```bash
+npx prisma db seed
+```
+
+---
+
+### 5. Run Development Server
 
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`.
+App will be available at:
 
-## Docker deployment
+```
+http://localhost:3000
+```
+
+---
+
+## Production
+
+### Build
 
 ```bash
-docker compose up --build
-```
-
-The container starts the app, runs Prisma migrations automatically, and seeds the demo users automatically.
-
-## Railway deployment with the least manual work
-
-### Important note about Git providers
-
-Railway's dashboard repo import flow is documented around **GitHub repos**, while Railway also supports deploying code directly with the **Railway CLI**. Since this repository lives on GitLab, the simplest setup is:
-
-1. clone this repo locally
-2. create a new Railway project from the CLI
-3. add PostgreSQL
-4. deploy
-
-### One-time local prerequisites
-
-- A Railway account
-- Railway CLI installed
-- Docker **not** required for Railway deployment
-
-Install the Railway CLI:
-
-```bash
-npm i -g @railway/cli
-railway login
-```
-
-### Fast Railway setup
-
-From the project root:
-
-```bash
-railway init
-railway add postgresql
-railway up
-```
-
-Then in the Railway dashboard:
-
-1. Open the app service
-2. Go to **Variables**
-3. Add this one variable only:
-
-```env
-DATABASE_URL=${{Postgres.DATABASE_URL}}
-```
-
-4. Go to **Settings > Networking**
-5. Click **Generate Domain**
-
-That is enough to get the app live.
-
-### Why this is minimal
-
-This repo already includes:
-
-- a `Dockerfile` Railway will use automatically
-- automatic Prisma migrations on container start
-- automatic demo-user seeding on container start
-- a health endpoint at `/api/health`
-- a `railway.toml` with deploy healthcheck settings
-
-### Optional but recommended on Railway
-
-Uploads are stored on the service filesystem. They will survive restarts of the same instance, but on many hosted platforms they are not guaranteed to persist forever across rebuilds or redeployments. For better durability, attach a Railway volume and mount it to:
-
-```text
-/app/public/uploads
-```
-
-The app is already configured to use that path by default inside Docker.
-
-## Standard Linux / reverse proxy hosting
-
-You can also run this app on your own server with PostgreSQL and place it behind:
-
-- Nginx
-- Nginx Proxy Manager
-- Caddy
-- Apache
-- Traefik
-
-For direct Node hosting:
-
-```bash
-npm install
 npm run build
-npx prisma migrate deploy
-npm run prisma:seed
+```
+
+### Start
+
+```bash
 npm run start
 ```
 
-## Environment variables
+---
 
-See `.env.example` for local development defaults.
+## Docker / Railway Deployment
 
-Main variables:
+### Required Environment Variables
 
-```env
-DATABASE_URL=postgresql://...
-JWT_SECRET=change-this-to-a-long-random-string
-UPLOAD_DIR=public/uploads
-SEED_ON_STARTUP=true
+```
+DATABASE_URL
+JWT_SECRET
+UPLOAD_DIR (recommended)
 ```
 
-## Notes for production
+### Important Notes
 
-- Change `JWT_SECRET`
-- Replace demo accounts with real users
-- Use a persistent upload volume or object storage
-- Add TLS through your reverse proxy or hosting platform
+- Always run:
+  ```bash
+  npx prisma db push
+  ```
+- Use persistent storage for uploads
+- Without persistence, images will be lost on redeploy
+
+---
+
+## Demo Accounts (if enabled)
+
+```
+tech@example.com
+leader@example.com
+
+Password:
+MasterPass123
+```
+
+⚠️ Remove demo users before production use.
+
+---
+
+## Project Structure
+
+```
+app/
+  api/
+  dashboard/
+  login/
+
+lib/
+prisma/
+public/
+```
+
+---
+
+## ⚠️ Intended Use
+
+This application is intended **strictly for controlled internal field operations**, including:
+
+- Technician field reporting  
+- Supervisor validation workflows  
+- Leadership oversight and review  
+
+It is **not intended for public distribution, open use, or commercial reuse** without explicit authorization.
+
+---
+
+## ⚖️ Ownership & Restrictions
+
+**All content, source code, architecture, UI/UX design, workflows, logic, assets, and associated materials in this project are the exclusive property of Joseph Engelmann.**
+
+**All rights are reserved.**
+
+### 🚫 Strict Prohibition
+
+The following actions are strictly prohibited without explicit prior written permission:
+
+- Use of the software  
+- Copying or duplication  
+- Modification or derivative works  
+- Distribution or sharing  
+- Deployment (public or private)  
+- Hosting or resale  
+- Reverse engineering  
+- Reproduction in whole or in part  
+
+No license is granted or implied by access, possession, or viewing of this repository.
+
+Unauthorized use may result in legal action.
+
+---
+
+## Disclaimer
+
+This software is provided for controlled use only. Improper deployment, misuse, or unauthorized access is not permitted.
