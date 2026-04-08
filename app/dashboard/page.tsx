@@ -13,7 +13,7 @@ type SubmissionImage = {
 
 type Submission = {
   id: string;
-  type: 'CUT_DROP' | 'TRAPPED_DROP' | 'HAZARDOUS_DROP';
+  type: 'CUT_DROP' | 'TRAPPED_DROP' | 'HAZARDOUS_DROP' | 'MDU';
   department: 'FULFILLMENT' | 'LINE' | 'SUPERVISORS';
   region: string;
   state: string;
@@ -53,6 +53,7 @@ const typeOptions = [
   { value: 'CUT_DROP', label: 'Cut Drop' },
   { value: 'TRAPPED_DROP', label: 'Trapped Drop' },
   { value: 'HAZARDOUS_DROP', label: 'Hazardous Drop' },
+  { value: 'MDU', label: 'MDU' },
 ] as const;
 
 const departmentOptions = [
@@ -65,6 +66,7 @@ const typeLabels: Record<Submission['type'], string> = {
   CUT_DROP: 'Cut Drop',
   TRAPPED_DROP: 'Trapped Drop',
   HAZARDOUS_DROP: 'Hazardous Drop',
+  MDU: 'MDU',
 };
 
 const departmentLabels: Record<Submission['department'], string> = {
@@ -368,12 +370,11 @@ export default function DashboardPage() {
       <div style={styles.shell}>
         <div style={styles.topbar}>
           <div style={{ minWidth: 0 }}>
-            <div style={styles.badge}>field operations</div>
-            <h1 style={styles.title}>Technician Drop Entry Portal</h1>
+            <div style={styles.badge}>Field operations</div>
+            <h1 style={styles.title}>Technician Drop Portal</h1>
             <p style={styles.subtitle}>
-              Submit cut, trapped, and hazardous drop reports with metadata-rich photos.
+              Submit cut, trapped, hazardous, and MDU reports with metadata-rich photos.
             </p>
-            <p style={styles.createdBy}>Created by: Joseph Engelmann</p>
           </div>
 
           <button onClick={handleLogout} style={styles.secondaryButton}>
@@ -598,7 +599,7 @@ export default function DashboardPage() {
                                   style={styles.thumbButton}
                                 >
                                   <img
-                                    src={preview.publicUrl}
+                                    src={`/api/images/${preview.id}`}
                                     alt={preview.fileName}
                                     style={styles.thumbImage}
                                   />
@@ -738,7 +739,7 @@ export default function DashboardPage() {
                                       style={styles.thumbButton}
                                     >
                                       <img
-                                        src={preview.publicUrl}
+                                        src={`/api/images/${preview.id}`}
                                         alt={preview.fileName}
                                         style={styles.thumbImage}
                                       />
@@ -853,7 +854,7 @@ export default function DashboardPage() {
             </div>
             <div style={styles.modalImageWrap}>
               <img
-                src={previewImage.publicUrl}
+                src={`/api/images/${previewImage.id}`}
                 alt={previewImage.fileName}
                 style={styles.modalImage}
               />
@@ -1107,7 +1108,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   choiceGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
     gap: 8,
   },
   choiceButton: {
