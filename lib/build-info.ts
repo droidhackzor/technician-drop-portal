@@ -1,7 +1,7 @@
 export const BUILD_INFO = {
-  branch: 'dev',
-  commit: 'local',
-  lastEditedIso: new Date().toISOString(),
-  lastEditedEpoch: Math.floor(Date.now() / 1000),
-  display: 'dev-local',
+  branch: 'main',
+  commit: '1491a2c',
+  lastEditedIso: '2026-04-08T19:08:00Z',
+  lastEditedEpoch: 1775675280,
+  display: 'main-1491a2c',
 } as const;
