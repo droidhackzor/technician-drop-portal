@@ -16,6 +16,9 @@ variables:
   NODE_ENV: test
   NEXT_TELEMETRY_DISABLED: "1"
   DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/technician_drop_portal"
+  POSTGRES_DB: "technician_drop_portal"
+  POSTGRES_USER: "postgres"
+  POSTGRES_PASSWORD: "postgres"
   JWT_SECRET: "ci-test-secret"
   UPLOAD_DIR: "./uploads"
   GITHUB_BRANCH: "main"
