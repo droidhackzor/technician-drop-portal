@@ -68,6 +68,11 @@ const typeOptions = [
   { value: 'MDU', label: 'MDU' },
 ] as const;
 
+const typeFilterOptions = [
+  { value: 'ALL', label: 'All' },
+  ...typeOptions,
+] as const;
+
 const departmentOptions = [
   { value: 'FULFILLMENT', label: 'Fulfillment' },
   { value: 'LINE', label: 'Line' },
@@ -127,6 +132,7 @@ function timeAgoFromIso(iso: string) {
 export default function DashboardPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [type, setType] = useState<Submission['type']>('CUT_DROP');
+  const [typeFilter, setTypeFilter] = useState<'ALL' | Submission['type']>('ALL');
   const [department, setDepartment] =
     useState<Submission['department']>('FULFILLMENT');
   const [region, setRegion] = useState(regionOptions[0]);
@@ -414,7 +420,7 @@ export default function DashboardPage() {
           submission.state === stateName &&
           submission.ffo === ffo &&
           submission.department === department &&
-          submission.type === type;
+          (typeFilter === 'ALL' || submission.type === typeFilter);
 
         if (!matchesSelectedFilters) return false;
 
@@ -446,7 +452,7 @@ export default function DashboardPage() {
 
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
-  }, [search, submissions, region, stateName, ffo, department, type]);
+  }, [search, submissions, region, stateName, ffo, department, typeFilter]);
 
   function handleExportSpreadsheet() {
     const headers = [
@@ -734,7 +740,7 @@ export default function DashboardPage() {
                 <div>
                   <h2 style={styles.sectionTitle}>Recent submissions</h2>
                   <p style={styles.sectionText}>
-                    Showing only {typeLabels[type]} / {departmentLabels[department]} / {region} / {stateName} / {ffo}
+                    Showing {typeFilter === 'ALL' ? 'all issue types' : typeLabels[typeFilter]} / {departmentLabels[department]} / {region} / {stateName} / {ffo}
                   </p>
                 </div>
 
@@ -754,6 +760,27 @@ export default function DashboardPage() {
                     placeholder="Search submissions"
                     style={{ ...styles.input, maxWidth: isMobile ? '100%' : 320 }}
                   />
+                </div>
+              </div>
+
+              <div style={styles.filterRow}>
+                <span style={styles.filterLabel}>Issue filter</span>
+                <div style={styles.choiceGrid}>
+                  {typeFilterOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setTypeFilter(option.value)}
+                      style={{
+                        ...styles.choiceButton,
+                        ...(typeFilter === option.value
+                          ? styles.choiceButtonActive
+                          : styles.choiceButtonInactive),
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -1488,6 +1515,18 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 12,
     flexWrap: 'wrap',
+  },
+  filterRow: {
+    display: 'grid',
+    gap: 8,
+    marginBottom: 16,
+  },
+  filterLabel: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
   },
   tableWrap: {
     overflow: 'hidden',
