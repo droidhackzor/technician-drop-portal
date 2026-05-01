@@ -21,6 +21,12 @@
   --shadow-soft: 0 10px 30px rgba(15,23,42,0.06);
   --bg-active: #111827;
   --text-active: #ffffff;
+  --bg-error: #fef2f2;
+  --text-error: #b91c1c;
+  --bg-success: #f0fdf4;
+  --text-success: #15803d;
+  --bg-info: #eff6ff;
+  --text-info: #1d4ed8;
 }
 
 html[data-theme='dark'] {
