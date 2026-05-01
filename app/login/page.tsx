@@ -7,8 +7,6 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/dashboard';
-  const microsoftConfigured =
-    process.env.NEXT_PUBLIC_MICROSOFT_LOGIN_ENABLED === 'true';
 
   const [email, setEmail] = useState('tech@example.com');
   const [password, setPassword] = useState('MasterPass123');
@@ -106,43 +104,57 @@ function LoginForm() {
           Technician Drop Portal
         </p>
 
-        {microsoftConfigured ? (
-          <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
-            <a
-              href={`/api/auth/microsoft?redirect=${encodeURIComponent(redirectTo)}`}
-              style={{
-                width: '100%',
-                borderRadius: 16,
-                border: '1px solid rgba(15,23,42,0.12)',
-                background: '#fff',
-                color: '#111827',
-                fontSize: 15,
-                fontWeight: 700,
-                padding: '14px 16px',
-                textAlign: 'center',
-                textDecoration: 'none',
-                boxSizing: 'border-box',
-              }}
-            >
-              Continue with Microsoft
-            </a>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                color: '#9ca3af',
-                fontSize: 12,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-              }}
-            >
-              <div style={{ flex: 1, height: 1, background: 'rgba(15,23,42,0.08)' }} />
-              or
-              <div style={{ flex: 1, height: 1, background: 'rgba(15,23,42,0.08)' }} />
-            </div>
+        <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
+          <button
+            type="button"
+            disabled
+            title="Microsoft login is not fully configured yet"
+            style={{
+              width: '100%',
+              borderRadius: 16,
+              border: '1px solid rgba(15,23,42,0.12)',
+              background: '#f8fafc',
+              color: '#6b7280',
+              fontSize: 15,
+              fontWeight: 700,
+              padding: '14px 16px',
+              textAlign: 'center',
+              boxSizing: 'border-box',
+              cursor: 'not-allowed',
+              opacity: 0.8,
+            }}
+          >
+            Continue with Microsoft
+          </button>
+          <div
+            style={{
+              borderRadius: 16,
+              border: '1px solid #fde68a',
+              background: '#fffbeb',
+              color: '#92400e',
+              padding: '12px 14px',
+              fontSize: 13,
+              lineHeight: 1.5,
+            }}
+          >
+            Microsoft login is visible but not complete yet. Please use your email and password for now.
           </div>
-        ) : null}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              color: '#9ca3af',
+              fontSize: 12,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+            }}
+          >
+            <div style={{ flex: 1, height: 1, background: 'rgba(15,23,42,0.08)' }} />
+            or
+            <div style={{ flex: 1, height: 1, background: 'rgba(15,23,42,0.08)' }} />
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 14 }}>
           <div>
