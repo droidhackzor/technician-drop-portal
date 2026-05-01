@@ -93,6 +93,17 @@ const statusLabels: Record<Submission['status'], string> = {
   NOT_VALID: 'Not Valid',
 };
 
+const statusSortOrder: Record<Submission['status'], number> = {
+  NOT_VALID: 0,
+  OPEN: 1,
+  COMPLETE: 2,
+};
+
+function csvCell(value: string | number | null | undefined) {
+  const text = value == null ? '' : String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
 function timeAgoFromIso(iso: string) {
   const timestamp = new Date(iso).getTime();
   if (Number.isNaN(timestamp)) return 'unknown';
@@ -387,39 +398,95 @@ export default function DashboardPage() {
   const filteredSubmissions = useMemo(() => {
     const q = search.trim().toLowerCase();
 
-    return submissions.filter((submission) => {
-      const matchesSelectedFilters =
-        submission.region === region &&
-        submission.state === stateName &&
-        submission.ffo === ffo &&
-        submission.department === department &&
-        submission.type === type;
+    return submissions
+      .filter((submission) => {
+        const matchesSelectedFilters =
+          submission.region === region &&
+          submission.state === stateName &&
+          submission.ffo === ffo &&
+          submission.department === department &&
+          submission.type === type;
 
-      if (!matchesSelectedFilters) return false;
+        if (!matchesSelectedFilters) return false;
 
-      if (!q) return true;
+        if (!q) return true;
 
-      const haystack = [
-        submission.address,
-        submission.gpsText,
-        submission.region,
-        submission.state,
-        submission.ffo,
-        submission.notes,
-        submission.status,
-        submission.statusNote,
-        submission.submittedBy?.name,
-        submission.submittedBy?.email,
-        typeLabels[submission.type],
-        departmentLabels[submission.department],
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+        const haystack = [
+          submission.address,
+          submission.gpsText,
+          submission.region,
+          submission.state,
+          submission.ffo,
+          submission.notes,
+          submission.status,
+          submission.statusNote,
+          submission.submittedBy?.name,
+          submission.submittedBy?.email,
+          typeLabels[submission.type],
+          departmentLabels[submission.department],
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
 
-      return haystack.includes(q);
-    });
+        return haystack.includes(q);
+      })
+      .sort((a, b) => {
+        const statusDiff = statusSortOrder[a.status] - statusSortOrder[b.status];
+        if (statusDiff !== 0) return statusDiff;
+
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
   }, [search, submissions, region, stateName, ffo, department, type]);
+
+  function handleExportSpreadsheet() {
+    const headers = [
+      'Type',
+      'Status',
+      'Department',
+      'Region',
+      'State',
+      'FFO',
+      'Address',
+      'GPS',
+      'Notes',
+      'Status Note',
+      'Submitted At',
+      'Submitted By',
+      'Image Count',
+      'Submission ID',
+    ];
+
+    const rows = filteredSubmissions.map((submission) => [
+      typeLabels[submission.type],
+      statusLabels[submission.status],
+      departmentLabels[submission.department],
+      submission.region,
+      submission.state,
+      submission.ffo,
+      submission.address || '',
+      submission.gpsText || '',
+      submission.notes || '',
+      submission.statusNote || '',
+      submission.createdAt,
+      submission.submittedBy?.name || submission.submittedBy?.email || '',
+      submission.images.length,
+      submission.id,
+    ]);
+
+    const csv = [headers, ...rows]
+      .map((row) => row.map((value) => csvCell(value)).join(','))
+      .join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    link.href = url;
+    link.download = `technician-drop-portal-${type.toLowerCase()}-${stamp}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   const technicianNeedsNote =
     statusModal &&
@@ -659,12 +726,23 @@ export default function DashboardPage() {
                   </p>
                 </div>
 
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search submissions"
-                  style={{ ...styles.input, maxWidth: isMobile ? '100%' : 320 }}
-                />
+                <div style={styles.tableHeaderActions}>
+                  <button
+                    type="button"
+                    onClick={handleExportSpreadsheet}
+                    style={styles.secondaryButton}
+                    disabled={filteredSubmissions.length === 0}
+                  >
+                    Export to Spreadsheet
+                  </button>
+
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search submissions"
+                    style={{ ...styles.input, maxWidth: isMobile ? '100%' : 320 }}
+                  />
+                </div>
               </div>
 
               {isMobile ? (
@@ -1384,6 +1462,12 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'flex-start',
     gap: 16,
     marginBottom: 16,
+    flexWrap: 'wrap',
+  },
+  tableHeaderActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
     flexWrap: 'wrap',
   },
   tableWrap: {
