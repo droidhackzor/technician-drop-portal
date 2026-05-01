@@ -42,57 +42,14 @@ function LoginForm() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        background:
-          'radial-gradient(circle at top, #fbfcfe 0%, #f4f6fb 45%, #edf2f7 100%)',
-        padding: 16,
-        fontFamily:
-          'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 430,
-          background: 'rgba(255,255,255,0.92)',
-          border: '1px solid rgba(15,23,42,0.08)',
-          borderRadius: 28,
-          boxShadow: '0 10px 30px rgba(15,23,42,0.06)',
-          padding: 24,
-        }}
-      >
-        <div
-          style={{
-            display: 'inline-flex',
-            borderRadius: 999,
-            border: '1px solid rgba(15,23,42,0.08)',
-            background: '#f8fafc',
-            color: '#52525b',
-            fontSize: 12,
-            fontWeight: 600,
-            padding: '6px 10px',
-            marginBottom: 14,
-          }}
-        >
+    <main className="login-page">
+      <div className="login-card">
+      
+        <div className="badge">
           Secure login
         </div>
 
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 40,
-            lineHeight: 1,
-            letterSpacing: '-0.05em',
-            color: '#111827',
-            fontWeight: 700,
-          }}
-        >
-          Sign in
-        </h1>
+        <h1>Sign in</h1>
 
         <p
           style={{
