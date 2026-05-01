@@ -15,6 +15,22 @@ export type SessionUser = {
   department?: string | null;
 };
 
+function toSessionUser(user: {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+  department: string | null;
+}): SessionUser {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name ?? null,
+    role: user.role,
+    department: user.department ?? null,
+  };
+}
+
 export async function authenticateUser(
   email: string,
   password: string
@@ -28,13 +44,16 @@ export async function authenticateUser(
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) return null;
 
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name ?? null,
-    role: user.role,
-    department: user.department ?? null,
-  };
+  return toSessionUser(user);
+}
+
+export async function getUserByEmail(email: string): Promise<SessionUser | null> {
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) return null;
+  return toSessionUser(user);
 }
 
 export async function createSessionToken(user: SessionUser) {

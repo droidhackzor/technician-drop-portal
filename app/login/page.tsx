@@ -7,10 +7,12 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/dashboard';
+  const microsoftConfigured =
+    process.env.NEXT_PUBLIC_MICROSOFT_LOGIN_ENABLED === 'true';
 
   const [email, setEmail] = useState('tech@example.com');
   const [password, setPassword] = useState('MasterPass123');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(searchParams.get('error') || '');
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -103,6 +105,44 @@ function LoginForm() {
         >
           Technician Drop Portal
         </p>
+
+        {microsoftConfigured ? (
+          <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
+            <a
+              href={`/api/auth/microsoft?redirect=${encodeURIComponent(redirectTo)}`}
+              style={{
+                width: '100%',
+                borderRadius: 16,
+                border: '1px solid rgba(15,23,42,0.12)',
+                background: '#fff',
+                color: '#111827',
+                fontSize: 15,
+                fontWeight: 700,
+                padding: '14px 16px',
+                textAlign: 'center',
+                textDecoration: 'none',
+                boxSizing: 'border-box',
+              }}
+            >
+              Continue with Microsoft
+            </a>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                color: '#9ca3af',
+                fontSize: 12,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}
+            >
+              <div style={{ flex: 1, height: 1, background: 'rgba(15,23,42,0.08)' }} />
+              or
+              <div style={{ flex: 1, height: 1, background: 'rgba(15,23,42,0.08)' }} />
+            </div>
+          </div>
+        ) : null}
 
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 14 }}>
           <div>

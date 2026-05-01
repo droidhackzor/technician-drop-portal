@@ -171,6 +171,26 @@ JWT_SECRET
 UPLOAD_DIR (recommended)
 ```
 
+### Optional Microsoft login
+
+The portal can also offer a **Continue with Microsoft** sign-in path while still using the same internal session cookie.
+Users must already exist in the local `User` table; Microsoft login matches by email and signs in the existing account.
+
+Required env vars for Microsoft login:
+
+```env
+MICROSOFT_CLIENT_ID=...
+MICROSOFT_CLIENT_SECRET=...
+MICROSOFT_TENANT_ID=common
+MICROSOFT_REDIRECT_URI=https://your-domain.example/api/auth/microsoft/callback
+NEXT_PUBLIC_MICROSOFT_LOGIN_ENABLED=true
+```
+
+Notes:
+- create an Azure app registration with a web redirect URI matching `MICROSOFT_REDIRECT_URI`
+- if the email returned by Microsoft does not already exist in the portal database, login is denied
+- local email/password login still works alongside Microsoft login
+
 ### Railway-recommended upload persistence
 
 For Railway, do **not** keep uploads inside the container filesystem alone.
