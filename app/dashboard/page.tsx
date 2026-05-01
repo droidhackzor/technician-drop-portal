@@ -73,6 +73,13 @@ const typeFilterOptions = [
   ...typeOptions,
 ] as const;
 
+const statusFilterOptions = [
+  { value: 'ALL', label: 'All' },
+  { value: 'OPEN', label: 'Open' },
+  { value: 'COMPLETE', label: 'Closed' },
+  { value: 'NOT_VALID', label: 'Not Valid' },
+] as const;
+
 const departmentOptions = [
   { value: 'FULFILLMENT', label: 'Fulfillment' },
   { value: 'LINE', label: 'Line' },
@@ -133,6 +140,7 @@ export default function DashboardPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [type, setType] = useState<Submission['type']>('CUT_DROP');
   const [typeFilter, setTypeFilter] = useState<'ALL' | Submission['type']>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | Submission['status']>('ALL');
   const [department, setDepartment] =
     useState<Submission['department']>('FULFILLMENT');
   const [region, setRegion] = useState(regionOptions[0]);
@@ -420,7 +428,8 @@ export default function DashboardPage() {
           submission.state === stateName &&
           submission.ffo === ffo &&
           submission.department === department &&
-          (typeFilter === 'ALL' || submission.type === typeFilter);
+          (typeFilter === 'ALL' || submission.type === typeFilter) &&
+          (statusFilter === 'ALL' || submission.status === statusFilter);
 
         if (!matchesSelectedFilters) return false;
 
@@ -452,7 +461,7 @@ export default function DashboardPage() {
 
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
-  }, [search, submissions, region, stateName, ffo, department, typeFilter]);
+  }, [search, submissions, region, stateName, ffo, department, typeFilter, statusFilter]);
 
   function handleExportSpreadsheet() {
     const headers = [
@@ -740,7 +749,7 @@ export default function DashboardPage() {
                 <div>
                   <h2 style={styles.sectionTitle}>Recent submissions</h2>
                   <p style={styles.sectionText}>
-                    Showing {typeFilter === 'ALL' ? 'all issue types' : typeLabels[typeFilter]} / {departmentLabels[department]} / {region} / {stateName} / {ffo}
+                    Showing {typeFilter === 'ALL' ? 'all issue types' : typeLabels[typeFilter]} / {statusFilter === 'ALL' ? 'all statuses' : statusFilterOptions.find((option) => option.value === statusFilter)?.label?.toLowerCase()} / {departmentLabels[department]} / {region} / {stateName} / {ffo}
                   </p>
                 </div>
 
@@ -774,6 +783,27 @@ export default function DashboardPage() {
                       style={{
                         ...styles.choiceButton,
                         ...(typeFilter === option.value
+                          ? styles.choiceButtonActive
+                          : styles.choiceButtonInactive),
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={styles.filterRow}>
+                <span style={styles.filterLabel}>Status filter</span>
+                <div style={styles.choiceGrid}>
+                  {statusFilterOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setStatusFilter(option.value)}
+                      style={{
+                        ...styles.choiceButton,
+                        ...(statusFilter === option.value
                           ? styles.choiceButtonActive
                           : styles.choiceButtonInactive),
                       }}
