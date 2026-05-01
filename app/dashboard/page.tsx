@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 type SubmissionImage = {
   id: string;
@@ -533,6 +534,7 @@ export default function DashboardPage() {
           </div>
 
           <div style={styles.topbarActions}>
+            <ThemeToggle />
             <button onClick={handleLogout} style={styles.secondaryButton}>
               Sign out
             </button>
@@ -1213,9 +1215,8 @@ function SelectField({
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: '100vh',
-    background:
-      'radial-gradient(circle at top, #fbfcfe 0%, #f4f6fb 45%, #edf2f7 100%)',
-    color: '#18181b',
+    background: 'var(--bg-page)',
+    color: 'var(--text-main)',
     fontFamily:
       'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
@@ -1231,10 +1232,10 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 16,
     padding: 24,
     marginBottom: 16,
-    background: 'rgba(255,255,255,0.88)',
-    border: '1px solid rgba(15,23,42,0.08)',
+    background: 'var(--bg-surface-muted)',
+    border: '1px solid var(--border-soft)',
     borderRadius: 28,
-    boxShadow: '0 10px 30px rgba(15,23,42,0.06)',
+    boxShadow: 'var(--shadow-soft)',
     backdropFilter: 'blur(10px)',
     flexWrap: 'wrap',
   },
@@ -1242,9 +1243,9 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'inline-flex',
     alignItems: 'center',
     borderRadius: 999,
-    border: '1px solid rgba(15,23,42,0.08)',
-    background: '#f8fafc',
-    color: '#52525b',
+    border: '1px solid var(--border-soft)',
+    background: 'var(--bg-soft)',
+    color: 'var(--text-subtle)',
     fontSize: 12,
     fontWeight: 600,
     padding: '6px 10px',
@@ -1256,11 +1257,11 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.02,
     letterSpacing: '-0.05em',
     fontWeight: 700,
-    color: '#111827',
+    color: 'var(--text-strong)',
   },
   subtitle: {
     margin: '10px 0 0',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     fontSize: 15,
   },
   topbarActions: {
@@ -1273,14 +1274,14 @@ const styles: Record<string, React.CSSProperties> = {
   buildInfo: {
     fontSize: 12,
     lineHeight: 1.5,
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     textAlign: 'right',
   },
   secondaryButton: {
     borderRadius: 14,
-    border: '1px solid rgba(15,23,42,0.1)',
-    background: '#fff',
-    color: '#111827',
+    border: '1px solid var(--border-medium)',
+    background: 'var(--bg-input)',
+    color: 'var(--text-strong)',
     fontSize: 14,
     fontWeight: 600,
     padding: '10px 14px',
@@ -1289,8 +1290,8 @@ const styles: Record<string, React.CSSProperties> = {
   mobileTabs: {
     display: 'flex',
     marginBottom: 16,
-    background: 'rgba(255,255,255,0.88)',
-    border: '1px solid rgba(15,23,42,0.08)',
+    background: 'var(--bg-surface-muted)',
+    border: '1px solid var(--border-soft)',
     borderRadius: 18,
     padding: 6,
     gap: 6,
@@ -1305,12 +1306,12 @@ const styles: Record<string, React.CSSProperties> = {
     border: 'none',
   },
   mobileTabActive: {
-    background: '#111827',
-    color: '#fff',
+    background: 'var(--bg-active)',
+    color: 'var(--text-active)',
   },
   mobileTabInactive: {
     background: 'transparent',
-    color: '#4b5563',
+    color: 'var(--text-button)',
   },
   gridDesktop: {
     display: 'grid',
@@ -1324,10 +1325,10 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 16,
   },
   card: {
-    background: 'rgba(255,255,255,0.92)',
-    border: '1px solid rgba(15,23,42,0.08)',
+    background: 'var(--bg-surface)',
+    border: '1px solid var(--border-soft)',
     borderRadius: 28,
-    boxShadow: '0 10px 30px rgba(15,23,42,0.06)',
+    boxShadow: 'var(--shadow-soft)',
     padding: 20,
     minWidth: 0,
   },
@@ -1340,12 +1341,12 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.1,
     letterSpacing: '-0.03em',
     fontWeight: 650,
-    color: '#111827',
+    color: 'var(--text-strong)',
   },
   sectionText: {
     margin: '8px 0 0',
     fontSize: 14,
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     lineHeight: 1.5,
   },
   formStack: {
@@ -1355,8 +1356,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   uploadBox: {
     borderRadius: 20,
-    border: '1px dashed rgba(15,23,42,0.18)',
-    background: '#f8fafc',
+    border: '1px dashed var(--border-dashed)',
+    background: 'var(--bg-soft)',
     padding: 16,
   },
   label: {
@@ -1366,16 +1367,16 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
   },
   helperText: {
     fontSize: 12,
-    color: '#6b7280',
+    color: 'var(--text-muted)',
   },
   innerPanel: {
     marginTop: 12,
-    background: '#fff',
-    border: '1px solid rgba(15,23,42,0.08)',
+    background: 'var(--bg-input)',
+    border: '1px solid var(--border-soft)',
     borderRadius: 16,
     padding: 12,
   },
@@ -1383,7 +1384,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 8,
     fontSize: 14,
     fontWeight: 600,
-    color: '#111827',
+    color: 'var(--text-strong)',
   },
   fileList: {
     margin: 0,
@@ -1391,7 +1392,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   fileItem: {
     fontSize: 14,
-    color: '#52525b',
+    color: 'var(--text-subtle)',
     lineHeight: 1.5,
   },
   choiceGrid: {
@@ -1412,14 +1413,14 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   choiceButtonActive: {
-    background: '#111827',
-    color: '#fff',
-    border: '1px solid #111827',
+    background: 'var(--bg-active)',
+    color: 'var(--text-active)',
+    border: '1px solid var(--bg-active)',
   },
   choiceButtonInactive: {
-    background: '#fff',
-    color: '#374151',
-    border: '1px solid rgba(15,23,42,0.1)',
+    background: 'var(--bg-input)',
+    color: 'var(--text-button)',
+    border: '1px solid var(--border-medium)',
   },
   threeCol: {
     display: 'grid',
@@ -1434,9 +1435,9 @@ const styles: Record<string, React.CSSProperties> = {
   input: {
     width: '100%',
     borderRadius: 16,
-    border: '1px solid rgba(15,23,42,0.1)',
-    background: '#fff',
-    color: '#111827',
+    border: '1px solid var(--border-medium)',
+    background: 'var(--bg-input)',
+    color: 'var(--text-strong)',
     fontSize: 14,
     padding: '12px 14px',
     outline: 'none',
@@ -1448,9 +1449,9 @@ const styles: Record<string, React.CSSProperties> = {
   select: {
     width: '100%',
     borderRadius: 16,
-    border: '1px solid rgba(15,23,42,0.1)',
-    background: '#fff',
-    color: '#111827',
+    border: '1px solid var(--border-medium)',
+    background: 'var(--bg-input)',
+    color: 'var(--text-strong)',
     fontSize: 14,
     padding: '12px 42px 12px 14px',
     outline: 'none',
