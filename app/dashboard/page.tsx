@@ -523,11 +523,14 @@ export default function DashboardPage() {
             </button>
 
             <div style={styles.buildInfo}>
-              {buildInfo ? (
-                <>Build: {buildInfo.branch}-{buildInfo.commit}-{timeAgoFromIso(buildInfo.lastEditedIso)}</>
-              ) : (
-                <>Build: loading...</>
-              )}
+              <div>
+                {buildInfo ? (
+                  <>Build: {buildInfo.branch}-{buildInfo.commit}-{timeAgoFromIso(buildInfo.lastEditedIso)}</>
+                ) : (
+                  <>Build: loading...</>
+                )}
+              </div>
+              <div>Made by: JEngelmann</div>
             </div>
           </div>
         </div>
