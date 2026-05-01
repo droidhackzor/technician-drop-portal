@@ -47,6 +47,16 @@ async function githubJson<T>(url: string, token?: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+function fallbackBuildInfo(branch: string, railwayBranch: string, railwayCommit: string, error?: string) {
+  return NextResponse.json({
+    branch: railwayBranch || branch || 'main',
+    commit: railwayCommit || 'unknown',
+    lastEditedIso: new Date().toISOString(),
+    source: railwayCommit ? 'railway-fallback' : 'fallback',
+    ...(error ? { error } : {}),
+  });
+}
+
 export async function GET() {
   const owner = getEnv('GITHUB_OWNER');
   const repo = getEnv('GITHUB_REPO');
@@ -57,11 +67,11 @@ export async function GET() {
   const railwaySha = getEnv('RAILWAY_GIT_COMMIT_SHA');
   const railwayCommit = railwaySha ? railwaySha.slice(0, 7) : '';
 
-  try {
-    if (!owner || !repo) {
-      throw new Error('Missing GITHUB_OWNER or GITHUB_REPO');
-    }
+  if (!owner || !repo) {
+    return fallbackBuildInfo(branch, railwayBranch, railwayCommit);
+  }
 
+  try {
     const refUrl = `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(
       branch
     )}`;
@@ -69,7 +79,7 @@ export async function GET() {
 
     const sha = refData.object?.sha;
     if (!sha) {
-      throw new Error('GitHub ref did not include a SHA');
+      return fallbackBuildInfo(branch, railwayBranch, railwayCommit, 'GitHub ref did not include a SHA');
     }
 
     const commitUrl = `https://api.github.com/repos/${owner}/${repo}/commits/${sha}`;
@@ -86,14 +96,13 @@ export async function GET() {
       source: 'github',
     });
   } catch (error) {
-    console.error('GET /api/build-info failed:', error);
+    const message = error instanceof Error ? error.message : 'Failed to load build info';
+    const isExpectedGitHubMiss = message.includes('GitHub API 404') || message.includes('GitHub API 401');
 
-    return NextResponse.json({
-      branch: railwayBranch || branch || 'main',
-      commit: railwayCommit || 'unknown',
-      lastEditedIso: new Date().toISOString(),
-      source: railwayCommit ? 'railway-fallback' : 'fallback',
-      error: error instanceof Error ? error.message : 'Failed to load build info',
-    });
+    if (!isExpectedGitHubMiss) {
+      console.error('GET /api/build-info failed:', error);
+    }
+
+    return fallbackBuildInfo(branch, railwayBranch, railwayCommit, message);
   }
 }

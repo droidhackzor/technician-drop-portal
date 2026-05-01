@@ -1,7 +1,7 @@
 export const BUILD_INFO = {
   branch: "main",
-  commit: "0f01b81",
-  lastEditedIso: "2026-04-09T10:45:07-06:00",
-  lastEditedEpoch: 1775753107,
-  display: "main-0f01b81",
+  commit: "45a2549",
+  lastEditedIso: "2026-04-30T19:52:49-06:00",
+  lastEditedEpoch: 1777600369,
+  display: "main-45a2549",
 } as const;

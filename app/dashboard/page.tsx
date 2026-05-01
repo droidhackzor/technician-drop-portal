@@ -146,6 +146,7 @@ export default function DashboardPage() {
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const [search, setSearch] = useState('');
   const [previewImage, setPreviewImage] = useState<SubmissionImage | null>(null);
+  const [brokenImageIds, setBrokenImageIds] = useState<string[]>([]);
 
   const [statusModal, setStatusModal] = useState<{
     submission: Submission;
@@ -161,6 +162,14 @@ export default function DashboardPage() {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  function markImageBroken(imageId: string) {
+    setBrokenImageIds((current) => (current.includes(imageId) ? current : [...current, imageId]));
+  }
+
+  function isImageBroken(imageId: string) {
+    return brokenImageIds.includes(imageId);
+  }
 
   useEffect(() => {
     const updateIsMobile = () => {
@@ -759,7 +768,7 @@ export default function DashboardPage() {
                         <div key={submission.id} style={styles.mobileSubmissionCard}>
                           <div style={styles.mobileSubmissionTop}>
                             <div style={styles.mobileThumbWrap}>
-                              {preview ? (
+                              {preview && !isImageBroken(preview.id) ? (
                                 <button
                                   type="button"
                                   onClick={() => setPreviewImage(preview)}
@@ -769,6 +778,7 @@ export default function DashboardPage() {
                                     src={`/api/images/${preview.id}`}
                                     alt={preview.fileName}
                                     style={styles.thumbImage}
+                                    onError={() => markImageBroken(preview.id)}
                                   />
                                   {submission.images.length > 1 ? (
                                     <span style={styles.thumbCount}>
@@ -777,7 +787,7 @@ export default function DashboardPage() {
                                   ) : null}
                                 </button>
                               ) : (
-                                <div style={styles.noThumb}>—</div>
+                                <div style={styles.noThumb}>No image</div>
                               )}
                             </div>
 
@@ -899,7 +909,7 @@ export default function DashboardPage() {
                             return (
                               <tr key={submission.id}>
                                 <td style={styles.td}>
-                                  {preview ? (
+                                  {preview && !isImageBroken(preview.id) ? (
                                     <button
                                       type="button"
                                       onClick={() => setPreviewImage(preview)}
@@ -909,6 +919,7 @@ export default function DashboardPage() {
                                         src={`/api/images/${preview.id}`}
                                         alt={preview.fileName}
                                         style={styles.thumbImage}
+                                        onError={() => markImageBroken(preview.id)}
                                       />
                                       {submission.images.length > 1 ? (
                                         <span style={styles.thumbCount}>
@@ -917,7 +928,7 @@ export default function DashboardPage() {
                                       ) : null}
                                     </button>
                                   ) : (
-                                    <div style={styles.noThumb}>—</div>
+                                    <div style={styles.noThumb}>No image</div>
                                   )}
                                 </td>
                                 <td style={styles.td}>{typeLabels[submission.type]}</td>
@@ -1020,11 +1031,16 @@ export default function DashboardPage() {
               </button>
             </div>
             <div style={styles.modalImageWrap}>
-              <img
-                src={`/api/images/${previewImage.id}`}
-                alt={previewImage.fileName}
-                style={styles.modalImage}
-              />
+              {isImageBroken(previewImage.id) ? (
+                <div style={styles.missingImageNotice}>Image file is missing from server storage.</div>
+              ) : (
+                <img
+                  src={`/api/images/${previewImage.id}`}
+                  alt={previewImage.fileName}
+                  style={styles.modalImage}
+                  onError={() => markImageBroken(previewImage.id)}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -1552,6 +1568,9 @@ const styles: Record<string, React.CSSProperties> = {
     placeItems: 'center',
     color: '#9ca3af',
     fontWeight: 700,
+    fontSize: 11,
+    textAlign: 'center',
+    padding: 6,
     flexShrink: 0,
   },
   modalBackdrop: {
@@ -1598,6 +1617,14 @@ const styles: Record<string, React.CSSProperties> = {
     maxHeight: '80vh',
     objectFit: 'contain',
     display: 'block',
+  },
+  missingImageNotice: {
+    minHeight: 260,
+    display: 'grid',
+    placeItems: 'center',
+    color: '#cbd5e1',
+    textAlign: 'center',
+    padding: 24,
   },
   statusModalCard: {
     width: 'min(100%, 560px)',

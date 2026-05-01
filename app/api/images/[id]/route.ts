@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 
+function isMissingFileError(error: unknown) {
+  return error instanceof Error && 'code' in error && error.code === 'ENOENT';
+}
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +42,15 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('GET /api/images/[id] failed:', error);
-    return new NextResponse('File not found', { status: 404 });
+    if (!isMissingFileError(error)) {
+      console.error('GET /api/images/[id] failed:', error);
+    }
+
+    return new NextResponse('File not found', {
+      status: 404,
+      headers: {
+        'Cache-Control': 'private, max-age=60',
+      },
+    });
   }
 }
