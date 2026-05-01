@@ -179,14 +179,14 @@ Attach a persistent volume and point uploads at that mount path.
 Recommended setting:
 
 ```env
-UPLOAD_DIR=/data/uploads
+UPLOAD_DIR=/uploads
 ```
 
 Recommended Railway setup:
 
 1. Add a persistent volume to the service.
-2. Mount it at `/data`.
-3. Set `UPLOAD_DIR=/data/uploads`.
+2. Mount it at `/uploads`.
+3. Set `UPLOAD_DIR=/uploads`.
 4. Redeploy the service.
 
 What this solves:
