@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+UPLOAD_PATH="${UPLOAD_DIR:-./uploads}"
+mkdir -p "$UPLOAD_PATH"
+echo "[startup] ensured upload directory: $UPLOAD_PATH"
+
 echo "[startup] syncing Prisma schema to database"
 ./node_modules/prisma/build/index.js db push --accept-data-loss
 

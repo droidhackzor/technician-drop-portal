@@ -171,6 +171,32 @@ JWT_SECRET
 UPLOAD_DIR (recommended)
 ```
 
+### Railway-recommended upload persistence
+
+For Railway, do **not** keep uploads inside the container filesystem alone.
+Attach a persistent volume and point uploads at that mount path.
+
+Recommended setting:
+
+```env
+UPLOAD_DIR=/data/uploads
+```
+
+Recommended Railway setup:
+
+1. Add a persistent volume to the service.
+2. Mount it at `/data`.
+3. Set `UPLOAD_DIR=/data/uploads`.
+4. Redeploy the service.
+
+What this solves:
+- uploaded images survive rebuilds and restarts
+- Prisma/database records keep matching real files on disk
+- `/api/images/[id]` can still read files after deploys
+
+What it does **not** solve:
+- images that were already lost from older ephemeral containers are not recoverable unless you have a backup or can re-upload them
+
 ### Important Notes
 
 - Always run:
@@ -179,6 +205,7 @@ UPLOAD_DIR (recommended)
   ```
 - Use persistent storage for uploads
 - Without persistence, images will be lost on redeploy
+- The startup script now creates the upload directory automatically from `UPLOAD_DIR` before the app boots
 
 ---
 
