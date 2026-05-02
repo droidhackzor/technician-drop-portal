@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 function LoginForm() {
   const router = useRouter();
@@ -44,9 +45,12 @@ function LoginForm() {
   return (
     <main className="login-page">
       <div className="login-card">
-      
-        <div className="badge">
-          Secure login
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div className="badge">
+            Secure login
+          </div>
+          <ThemeToggle />
         </div>
 
         <h1>Sign in</h1>
@@ -55,7 +59,7 @@ function LoginForm() {
           style={{
             margin: '10px 0 24px',
             fontSize: 14,
-            color: '#6b7280',
+            color: 'var(--text-muted, #6b7280)',
           }}
         >
           Technician Drop Portal
@@ -69,14 +73,14 @@ function LoginForm() {
             style={{
               width: '100%',
               borderRadius: 16,
-              border: '1px solid rgba(15,23,42,0.12)',
-              background: '#f8fafc',
-              color: '#6b7280',
+              border: '1px solid var(--border-medium, rgba(15,23,42,0.12))',
+              background: 'var(--bg-soft, #f8fafc)',
+              color: 'var(--text-muted, #6b7280)',
               fontSize: 15,
               fontWeight: 700,
               padding: '14px 16px',
               textAlign: 'center',
-              boxSizing: 'border-box',
+              boxSizing: 'border-box' as const,
               cursor: 'not-allowed',
               opacity: 0.8,
             }}
@@ -101,15 +105,15 @@ function LoginForm() {
               display: 'flex',
               alignItems: 'center',
               gap: 10,
-              color: '#9ca3af',
+              color: 'var(--text-muted, #9ca3af)',
               fontSize: 12,
-              textTransform: 'uppercase',
+              textTransform: 'uppercase' as const,
               letterSpacing: '0.08em',
             }}
           >
-            <div style={{ flex: 1, height: 1, background: 'rgba(15,23,42,0.08)' }} />
+            <div style={{ flex: 1, height: 1, background: 'var(--border-medium, rgba(15,23,42,0.08))' }} />
             or
-            <div style={{ flex: 1, height: 1, background: 'rgba(15,23,42,0.08)' }} />
+            <div style={{ flex: 1, height: 1, background: 'var(--border-medium, rgba(15,23,42,0.08))' }} />
           </div>
         </div>
 
@@ -122,8 +126,8 @@ function LoginForm() {
                 fontSize: 12,
                 fontWeight: 700,
                 letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: '#6b7280',
+                textTransform: 'uppercase' as const,
+                color: 'var(--text-muted, #6b7280)',
               }}
             >
               Email
@@ -146,8 +150,8 @@ function LoginForm() {
                 fontSize: 12,
                 fontWeight: 700,
                 letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: '#6b7280',
+                textTransform: 'uppercase' as const,
+                color: 'var(--text-muted, #6b7280)',
               }}
             >
               Password
@@ -167,8 +171,8 @@ function LoginForm() {
               style={{
                 borderRadius: 16,
                 border: '1px solid #fecaca',
-                background: '#fef2f2',
-                color: '#b91c1c',
+                background: 'var(--bg-error, #fef2f2)',
+                color: 'var(--text-error, #b91c1c)',
                 padding: '12px 14px',
                 fontSize: 14,
               }}
@@ -184,8 +188,8 @@ function LoginForm() {
               width: '100%',
               borderRadius: 16,
               border: 'none',
-              background: '#111827',
-              color: '#fff',
+              background: 'var(--text-strong, #111827)',
+              color: 'var(--bg-input, #fff)',
               fontSize: 15,
               fontWeight: 700,
               padding: '14px 16px',
@@ -201,15 +205,15 @@ function LoginForm() {
           style={{
             marginTop: 20,
             borderRadius: 18,
-            border: '1px solid rgba(15,23,42,0.08)',
-            background: '#f8fafc',
+            border: '1px solid var(--border-medium, rgba(15,23,42,0.08))',
+            background: 'var(--bg-soft, #f8fafc)',
             padding: 14,
             fontSize: 14,
-            color: '#52525b',
+            color: 'var(--text-muted, #52525b)',
             lineHeight: 1.6,
           }}
         >
-          <strong style={{ color: '#111827' }}>Demo accounts</strong>
+          <strong style={{ color: 'var(--text-strong, #111827)' }}>Demo accounts</strong>
           <br />
           tech@example.com / MasterPass123
           <br />
@@ -223,9 +227,9 @@ function LoginForm() {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   borderRadius: 16,
-  border: '1px solid rgba(15,23,42,0.1)',
-  background: '#fff',
-  color: '#111827',
+  border: '1px solid var(--border-medium, rgba(15,23,42,0.1))',
+  background: 'var(--bg-input, #fff)',
+  color: 'var(--text-strong, #111827)',
   fontSize: 14,
   padding: '12px 14px',
   outline: 'none',
@@ -234,7 +238,7 @@ const inputStyle: React.CSSProperties = {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#f4f6fb' }} />}>
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: 'var(--bg-soft, #f4f6fb)' }} />}>
       <LoginForm />
     </Suspense>
   );
